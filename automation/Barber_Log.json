@@ -1,0 +1,275 @@
+{
+  "name": "Barber Log",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "q": "Appointment Request from"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "160d51b3-7fae-4cce-97b6-a5f8afa02819",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "5QLjNGMxGIczdBhO",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 1. Target the full body text from the 'Get a message' node\nconst emailBody = $json.text || \"\";\n\n// 2. Extraction helper - uses the labels in email as anchors\nconst extract = (startLabel, endLabel) => {\n  const parts = emailBody.split(startLabel);\n  if (parts.length < 2) return \"N/A\";\n  const content = parts[1].split(endLabel)[0];\n  return content.trim();\n};\n\n// 3. Precise Date/Time Logic\n// Using the ISO date n8n already provided in JSON\nconst emailDate = new Date($json.date);\nconst dateStr = emailDate.toLocaleDateString(\"en-US\", { timeZone: \"America/Los_Angeles\" });\nconst timeStr = emailDate.toLocaleTimeString(\"en-US\", { \n  timeZone: \"America/Los_Angeles\", \n  hour: '2-digit', \n  minute: '2-digit' \n});\n\n// 4. Map the 11 fields from Google Sheets\nreturn {\n  name: extract(\"request from \", \":\"),\n  date: dateStr,\n  time: timeStr,\n  phone: extract(\"Phone #: \", \"Preferred Date 1:\"),\n  date1: extract(\"Preferred Date 1: \", \"Availability for Date 1:\"),\n  avail1: extract(\"Availability for Date 1: \", \"Preferred Date 2:\"),\n  date2: extract(\"Preferred Date 2: \", \"Availability for Date 2:\"),\n  avail2: extract(\"Availability for Date 2: \", \"Preferred Date 3:\"),\n  date3: extract(\"Preferred Date 3: \", \"Availability for Date 3:\"),\n  avail3: extract(\"Availability for Date 3: \", \"Description of Haircut\"),\n  description: extract(\"Other Comments:\", \"Best wishes\")\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "f0cef7e7-bda7-4720-8bc2-47b8d8c0dfec",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "86ac8993-68e8-4809-bf05-f1cafc56ad53",
+      "name": "Get a message",
+      "webhookId": "90f1edc4-e9ad-463f-8745-4785dab03130",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "5QLjNGMxGIczdBhO",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18QTVoA7eT5Iga6bnys8X_Q32B2NBgP9epeV8Jul63hU",
+          "mode": "list",
+          "cachedResultName": "Barber Appointment Log Zapier (n8n)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18QTVoA7eT5Iga6bnys8X_Q32B2NBgP9epeV8Jul63hU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18QTVoA7eT5Iga6bnys8X_Q32B2NBgP9epeV8Jul63hU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.name }}",
+            "Date": "={{ $json.date }}",
+            "Time": "={{ $json.time }}",
+            "Phone #": "={{ $json.phone }}",
+            "Preferred Date 1": "={{ $json.date1 }}",
+            "Availability for Date 1": "={{ $json.avail1 }}",
+            "Preferred Date 2": "={{ $json.date2 }}",
+            "Availability for Date 2": "={{ $json.avail2 }}",
+            "Preferred Date 3": "={{ $json.date3 }}",
+            "Availability for Date 3": "={{ $json.avail3 }}",
+            "Description of Haircut / Other Comments": "={{ $json.description }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone #",
+              "displayName": "Phone #",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Preferred Date 1",
+              "displayName": "Preferred Date 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Availability for Date 1",
+              "displayName": "Availability for Date 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Preferred Date 2",
+              "displayName": "Preferred Date 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Availability for Date 2",
+              "displayName": "Availability for Date 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Preferred Date 3",
+              "displayName": "Preferred Date 3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Availability for Date 3",
+              "displayName": "Availability for Date 3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Description of Haircut / Other Comments",
+              "displayName": "Description of Haircut / Other Comments",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        0
+      ],
+      "id": "2be76b38-df27-4fa2-baa4-d04004fe491a",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "XwRzy4Htqzji44PS",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a message": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": {
+    "node:Gmail Trigger": {
+      "Gmail Trigger": {
+        "lastTimeChecked": 1776657798
+      }
+    }
+  },
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

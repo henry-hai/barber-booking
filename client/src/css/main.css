@@ -15,21 +15,19 @@ body {
   color: var(--ink);
 }
 
-/* Outer grid: fills the window. A branded header row sits on top of a
-   three-column body (mailboxes | center | contacts). */
-.appContainer {
-  display: grid;
-  grid-template-columns: 180px 1fr 260px;
-  grid-template-rows: 60px 1fr;
+/* ---- App shell: branded app bar + swappable body ---- */
+.appShell {
+  display: flex;
+  flex-direction: column;
   width: 100vw;
   height: 100vh;
   background: var(--canvas);
 }
 
-/* Branded top bar spanning all three columns. */
-.toolbar {
-  grid-column: 1 / 4;
-  grid-row: 1 / 1;
+/* Dark top app bar with the wordmark and the Dashboard/Mailroom toggle. */
+.appBar {
+  flex: 0 0 auto;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -37,25 +35,69 @@ body {
   background: var(--ink);
   color: #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
-  z-index: 1;
+  z-index: 2;
 }
 
-/* Shop wordmark on the left of the top bar. */
+/* Body fills the remaining height; each view manages its own scrolling. */
+.appBody {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Shop wordmark. */
 .brand {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   font-weight: 700;
   letter-spacing: 0.3px;
 }
 .brand .brand-name { font-size: 18px; }
-.brand .brand-tag {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--brand);
-  text-transform: uppercase;
-  letter-spacing: 1px;
+
+/* View toggle (Dashboard / Mailroom). */
+.appNav { display: flex; gap: 6px; }
+.navTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
 }
+.navTab:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.navTab.active { background: var(--brand); color: #fff; }
+
+/* Mailroom inner grid: a light action sub-bar over the three-column body. */
+.appContainer {
+  display: grid;
+  grid-template-columns: 180px 1fr 260px;
+  grid-template-rows: 52px 1fr;
+  width: 100%;
+  height: 100%;
+  background: var(--canvas);
+}
+
+/* Light sub-toolbar holding the Mailroom action buttons (right-aligned). */
+.toolbar {
+  grid-column: 1 / 4;
+  grid-row: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+.toolbarActions { display: flex; align-items: center; }
 
 /* Generic column panel chrome. */
 .mailboxList,
@@ -141,11 +183,103 @@ body {
 .mailboxList::-webkit-scrollbar,
 .contactList::-webkit-scrollbar,
 .messageList::-webkit-scrollbar,
-.centerViews::-webkit-scrollbar { width: 8px; height: 8px; }
+.centerViews::-webkit-scrollbar,
+.dashboard::-webkit-scrollbar { width: 8px; height: 8px; }
 .mailboxList::-webkit-scrollbar-thumb,
 .contactList::-webkit-scrollbar-thumb,
 .messageList::-webkit-scrollbar-thumb,
-.centerViews::-webkit-scrollbar-thumb {
+.centerViews::-webkit-scrollbar-thumb,
+.dashboard::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 8px;
+}
+
+/* ---- Appointments dashboard ---- */
+.dashboard {
+  height: 100%;
+  overflow: auto;
+  padding: 22px 28px;
+  background: var(--canvas);
+}
+.dashTitle {
+  margin: 0 0 18px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Headline stat cards. */
+.statRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  gap: 16px;
+  max-width: 720px;
+  margin-bottom: 26px;
+}
+.statCard {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border-top: 3px solid var(--brand);
+}
+.statValue { font-size: 32px; font-weight: 700; color: var(--ink); line-height: 1.1; }
+.statLabel {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* Booking request cards. */
+.reqList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+.reqCard {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.reqHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.reqName { font-size: 17px; font-weight: 700; color: var(--ink); }
+.reqSubmitted {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.reqPhone {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.reqPhone a { color: var(--brand-dark); text-decoration: none; }
+.reqPhone a:hover { text-decoration: underline; }
+.reqSlots { display: flex; flex-direction: column; gap: 5px; }
+.slot { display: flex; align-items: center; font-size: 14px; color: var(--ink); }
+.slotDate { font-weight: 600; }
+.slotAvail { color: var(--muted); margin-left: 6px; }
+.reqNotes {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--muted);
+  font-style: italic;
 }
