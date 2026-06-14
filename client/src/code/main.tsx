@@ -5,7 +5,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import "normalize.css";
 import "../css/main.css";
 import { theme } from "./theme";
-import BaseLayout from "./components/BaseLayout";
+import AppShell from "./components/AppShell";
 
 /* normalize.css is imported first so its browser resets apply before main.css styles.
    ReactDOM.createRoot is the React 18 replacement for the textbook's ReactDOM.render().
@@ -18,6 +18,6 @@ const root = ReactDOM.createRoot(document.body as HTMLElement);
 root.render(
   <ThemeProvider theme={ theme }>
     <CssBaseline />
-    <BaseLayout />
+    <AppShell />
   </ThemeProvider>
 );
