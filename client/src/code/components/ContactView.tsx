@@ -1,58 +1,63 @@
 import React from "react";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EmailIcon from "@mui/icons-material/Email";
+import SaveIcon from "@mui/icons-material/Save";
 
-/* Shows a contact for viewing or adding.
-   When currentView is "contact": fields are disabled, shows Delete and Send Email buttons.
-   When currentView is "contactAdd": fields are editable, shows Save button. */
-const ContactView = ({ state }: { state: any }) => (
-  <form>
-    {/* Name field: disabled when viewing an existing contact.
-        id="contactName" must match the state property for fieldChangeHandler to work. */}
-    <TextField margin="dense" id="contactName" label="Name"
-      value={ state.contactName || "" }
-      variant="outlined"
-      InputProps={{ style: { color: "#000000" } }}
-      disabled={ state.currentView === "contact" }
-      style={{ width: 260 }}
-      onChange={ state.fieldChangeHandler } />
-    <br />
+/* Shows a contact for viewing or adding, inside a branded card.
+   currentView "contact": fields disabled, with Delete and Send Email actions.
+   currentView "contactAdd": fields editable, with a Save action. */
+const ContactView = ({ state }: { state: any }) => {
+  const viewing: boolean = state.currentView === "contact";
 
-    {/* Email field: same pattern as name field. */}
-    <TextField margin="dense" id="contactEmail" label="Email"
-      value={ state.contactEmail || "" }
-      variant="outlined"
-      InputProps={{ style: { color: "#000000" } }}
-      disabled={ state.currentView === "contact" }
-      style={{ width: 520 }}
-      onChange={ state.fieldChangeHandler } />
-    <br />
+  return (
+    <form className="viewCard" style={{ maxWidth: 560 }}>
+      {/* Name: disabled when viewing an existing contact. */}
+      <TextField margin="dense" id="contactName" label="Name" fullWidth
+        value={ state.contactName || "" }
+        variant="outlined"
+        disabled={ viewing }
+        InputProps={ viewing ? { className: "messageInfoField" } : undefined }
+        onChange={ state.fieldChangeHandler } />
 
-    {/* Save button only visible when adding a new contact. */}
-    { state.currentView === "contactAdd" &&
-      <Button variant="contained" color="primary" size="small"
-        style={{ marginTop: 10 }}
-        onClick={ state.saveContact }>
-        Save
-      </Button>
-    }
+      {/* Email: same pattern as the name field. */}
+      <TextField margin="dense" id="contactEmail" label="Email" fullWidth
+        value={ state.contactEmail || "" }
+        variant="outlined"
+        disabled={ viewing }
+        InputProps={ viewing ? { className: "messageInfoField" } : undefined }
+        onChange={ state.fieldChangeHandler } />
 
-    {/* Delete and Send Email buttons only visible when viewing an existing contact. */}
-    { state.currentView === "contact" &&
-      <Button variant="contained" color="primary" size="small"
-        style={{ marginTop: 10, marginRight: 10 }}
-        onClick={ state.deleteContact }>
-        Delete
-      </Button>
-    }
-    { state.currentView === "contact" &&
-      <Button variant="contained" color="primary" size="small"
-        style={{ marginTop: 10 }}
-        onClick={ () => state.showComposeMessage("contact") }>
-        Send Email
-      </Button>
-    }
-  </form>
-);
+      <div style={{ marginTop: 14 }}>
+        {/* Save: only when adding a new contact. */}
+        { state.currentView === "contactAdd" &&
+          <Button variant="contained" color="primary"
+            startIcon={ <SaveIcon /> }
+            onClick={ state.saveContact }>
+            Save
+          </Button>
+        }
+
+        {/* Delete + Send Email: only when viewing an existing contact. */}
+        { viewing &&
+          <Button variant="contained" color="primary"
+            startIcon={ <EmailIcon /> }
+            style={{ marginRight: 10 }}
+            onClick={ () => state.showComposeMessage("contact") }>
+            Send Email
+          </Button>
+        }
+        { viewing &&
+          <Button variant="outlined" color="secondary"
+            startIcon={ <DeleteIcon /> }
+            onClick={ state.deleteContact }>
+            Delete
+          </Button>
+        }
+      </div>
+    </form>
+  );
+};
 
 export default ContactView;

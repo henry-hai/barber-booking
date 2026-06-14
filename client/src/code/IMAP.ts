@@ -15,10 +15,13 @@ export class Worker {
     return response.data;
   }
 
-  /* Gets message headers for a specific mailbox path. */
+  /* Gets message headers for a specific mailbox path.
+     encodeURIComponent is required because Gmail folder paths contain "/" and
+     spaces (e.g. "[Gmail]/Sent Mail"); without it the extra "/" breaks the
+     Express :mailbox route and the request hangs. */
   public async listMessages(inMailbox: string): Promise<IMessage[]> {
     const response: AxiosResponse = await axios.get(
-      `${config.serverAddress}/mailboxes/${inMailbox}`
+      `${config.serverAddress}/mailboxes/${encodeURIComponent(inMailbox)}`
     );
     return response.data;
   }
@@ -26,14 +29,16 @@ export class Worker {
   /* Gets the full text body of a specific message by ID and mailbox. */
   public async getMessageBody(inID: string, inMailbox: string): Promise<string> {
     const response: AxiosResponse = await axios.get(
-      `${config.serverAddress}/messages/${inMailbox}/${inID}`
+      `${config.serverAddress}/messages/${encodeURIComponent(inMailbox)}/${inID}`
     );
     return response.data;
   }
 
   /* Sends a DELETE request for a specific message by ID and mailbox. */
   public async deleteMessage(inID: string, inMailbox: string): Promise<void> {
-    await axios.delete(`${config.serverAddress}/messages/${inMailbox}/${inID}`);
+    await axios.delete(
+      `${config.serverAddress}/messages/${encodeURIComponent(inMailbox)}/${inID}`
+    );
   }
 
 }

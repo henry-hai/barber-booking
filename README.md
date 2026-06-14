@@ -1,6 +1,6 @@
 # Barbering Booking Platform
 
-A full-stack barbering booking platform serving 300+ clients, built with React, Node.js, Express, TypeScript, and Webpack. The public site handles appointment requests through EmailJS, with Zapier automations for structured logging and downstream workflows. A separate Express API powers a React mail client using Gmail over SMTP/IMAP.
+A full-stack barbering booking platform serving 300+ clients, built with React, Node.js, Express, TypeScript, and Webpack. The public site handles appointment requests through EmailJS, with an n8n automation layer that turns booking emails into structured rows in Google Sheets. A separate Express API powers a React mail client using Gmail over SMTP/IMAP.
 
 ## Live static site
 
@@ -24,14 +24,14 @@ Browser  -->  Static Site (index.html, Webpack bundle)
 
 Appointment form  -->  EmailJS  -->  inbox notifications
                       |
-                      +-->  Zapier  -->  logging / Sheets / other automations
+                      +-->  n8n  -->  Gmail trigger -> JS transform -> Google Sheets
 
 Browser  -->  React SPA (client/)  -->  Express API (server/)  -->  Gmail (SMTP/IMAP)
                                               |
                                           NeDB (contacts)
 ```
 
-**Root** -- The barbering website: responsive single-page site with a React navbar component, TypeScript gallery modules bundled by Webpack, Tailwind CSS styling, and an EmailJS-powered booking form. Zapier connects that flow to automated data capture and business workflows (configured in the Zapier dashboard, not in this repo).
+**Root** -- The barbering website: responsive single-page site with a React navbar component, TypeScript gallery modules bundled by Webpack, Tailwind CSS styling, and an EmailJS-powered booking form. An n8n workflow (Gmail trigger → JavaScript transform → Google Sheets append) captures each booking email as a structured row (configured in the n8n editor, not in this repo).
 
 **server/** -- RESTful API built with Node.js and Express. Handles email operations via SMTP (NodeMailer) and IMAP, with an embedded NeDB database for persistent contact storage.
 
@@ -52,7 +52,7 @@ Browser  -->  React SPA (client/)  -->  Express API (server/)  -->  Gmail (SMTP/
 | NeDB | Embedded document database for contacts |
 | Axios | HTTP client for API communication |
 | EmailJS | Client-side appointment form: sends booking requests to email |
-| Zapier | Automation layer for booking-related logging and integrations |
+| n8n | Automation workflow: Gmail trigger → JavaScript transform → Google Sheets |
 
 ## Getting Started
 
@@ -109,7 +109,6 @@ Open `http://localhost:8080` to view the React client (served by the backend).
 | POST | `/messages` | Send a new email |
 | GET | `/contacts` | List all contacts |
 | POST | `/contacts` | Add a contact |
-| PUT | `/contacts/:id` | Update a contact |
 | DELETE | `/contacts/:id` | Delete a contact |
 
 ## Project Structure

@@ -1,64 +1,151 @@
-/* Outer grid: fills the entire browser window. Three columns, two rows. */
+/* ---- Brand palette (mirrors the public barbershop site) ----
+   --brand: cyan accent  --ink: charcoal  --line: hairline borders */
+:root {
+  --brand: #00b9ff;
+  --brand-dark: #009ed9;
+  --ink: #1f2937;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --panel: #ffffff;
+  --canvas: #f3f4f6;
+}
+
+body {
+  font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  color: var(--ink);
+}
+
+/* Outer grid: fills the window. A branded header row sits on top of a
+   three-column body (mailboxes | center | contacts). */
 .appContainer {
-    display: grid;
-    grid-template-columns: 150px 1fr 240px;
-    grid-template-rows: 50px 1fr;
-    width: 100vw;
-    height: 100vh;
-  }
-  
-  /* Toolbar spans all three columns in the first row. */
-  .toolbar {
-    grid-column: 1 / 4;
-    grid-row: 1 / 1;
-    border-bottom: 1px solid #e0e0e0;
-    padding-top: 8px;
-    padding-left: 4px;
-  }
-  
-  /* Mailbox list occupies the first column in the second row. */
-  .mailboxList {
-    grid-column: 1 / 1;
-    grid-row: 2 / 2;
-    border-right: 1px solid #e0e0e0;
-    padding-top: 6px;
-    padding-left: 4px;
-    overflow: auto;
-  }
-  
-  /* Center area is a nested grid with two rows: message list on top, view below. */
-  .centerArea {
-    display: grid;
-    grid-template-rows: 200px 1fr;
-  }
-  
-  /* Message list occupies the first row of the center sub-grid. */
-  .messageList {
-    border-bottom: 1px solid #e0e0e0;
-    grid-row: 1 / 1;
-    overflow: auto;
-  }
-  
-  /* View area occupies the second row of the center sub-grid. */
-  .centerViews {
-    grid-row: 2 / 2;
-    padding-top: 4px;
-    padding-left: 4px;
-    padding-right: 4px;
-    overflow: auto;
-  }
-  
-  /* Contact list occupies the third column in the second row. */
-  .contactList {
-    grid-column: 3 / 3;
-    grid-row: 2 / 2;
-    border-left: 1px solid #e0e0e0;
-    padding-top: 4px;
-    padding-left: 4px;
-    overflow: auto;
-  }
-  
-  /* Forces readable black text on disabled InputBase fields. */
-  .messageInfoField {
-    color: #000000 !important;
-  }
+  display: grid;
+  grid-template-columns: 180px 1fr 260px;
+  grid-template-rows: 60px 1fr;
+  width: 100vw;
+  height: 100vh;
+  background: var(--canvas);
+}
+
+/* Branded top bar spanning all three columns. */
+.toolbar {
+  grid-column: 1 / 4;
+  grid-row: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  background: var(--ink);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  z-index: 1;
+}
+
+/* Shop wordmark on the left of the top bar. */
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.brand .brand-name { font-size: 18px; }
+.brand .brand-tag {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Generic column panel chrome. */
+.mailboxList,
+.contactList {
+  background: var(--panel);
+  overflow: auto;
+  padding: 14px 12px;
+}
+.mailboxList {
+  grid-column: 1 / 1;
+  grid-row: 2 / 2;
+  border-right: 1px solid var(--line);
+}
+.contactList {
+  grid-column: 3 / 3;
+  grid-row: 2 / 2;
+  border-left: 1px solid var(--line);
+}
+
+/* Small uppercase section heading above each list. */
+.panelHeading {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin: 0 0 8px 6px;
+}
+
+/* Center area: message list on top, the open message/contact below. */
+.centerArea {
+  display: grid;
+  grid-template-rows: 230px 1fr;
+  min-width: 0;
+}
+.messageList {
+  border-bottom: 1px solid var(--line);
+  grid-row: 1 / 1;
+  overflow: auto;
+  background: var(--panel);
+}
+.centerViews {
+  grid-row: 2 / 2;
+  padding: 18px;
+  overflow: auto;
+  background: var(--canvas);
+}
+
+/* Message table rows: pointer + hover, with the open message highlighted. */
+.messageRow { cursor: pointer; transition: background-color 0.12s ease; }
+.messageRow:hover { background-color: #eaf8ff; }
+.messageRow.selected { background-color: #d6f1ff; }
+
+/* Card wrapper for the open message / compose / contact forms. */
+.viewCard {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  max-width: 820px;
+}
+
+/* Friendly empty / welcome state shown in the center area. */
+.emptyState {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--muted);
+  gap: 6px;
+}
+.emptyState .emptyIcon { font-size: 56px; color: var(--brand); opacity: 0.85; }
+.emptyState h2 { margin: 6px 0 0; color: var(--ink); font-weight: 700; }
+.emptyState p { margin: 0; font-size: 14px; }
+
+/* Forces readable dark text on disabled (read-only) message fields. */
+.messageInfoField { color: var(--ink) !important; }
+
+/* Slim, branded scrollbars. */
+.mailboxList::-webkit-scrollbar,
+.contactList::-webkit-scrollbar,
+.messageList::-webkit-scrollbar,
+.centerViews::-webkit-scrollbar { width: 8px; height: 8px; }
+.mailboxList::-webkit-scrollbar-thumb,
+.contactList::-webkit-scrollbar-thumb,
+.messageList::-webkit-scrollbar-thumb,
+.centerViews::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
