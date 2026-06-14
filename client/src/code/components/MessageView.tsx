@@ -1,96 +1,88 @@
 import React from "react";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import InputBase from "@mui/material/InputBase";
+import ReplyIcon from "@mui/icons-material/Reply";
+import DeleteIcon from "@mui/icons-material/Delete";
+import SendIcon from "@mui/icons-material/Send";
 
 /* Shows a message (currentView "message") or compose screen (currentView "compose").
-   Fields are conditionally shown/hidden based on currentView.
-   When viewing: ID, date, From are shown read-only. Reply and Delete buttons appear.
-   When composing: To and Subject are editable. Send button appears. */
-const MessageView = ({ state }: { state: any }) => (
-  <form>
-    {/* ID field: read-only, only shown when viewing a message.
-        InputBase is used instead of TextField because it is simpler for non-editable display. */}
-    { state.currentView === "message" &&
-      <InputBase defaultValue={ `ID ${state.messageID}` }
-        margin="dense" disabled={ true } fullWidth={ true }
-        className="messageInfoField" />
-    }
-    { state.currentView === "message" && <br /> }
+   When viewing: date and From are shown read-only with Reply and Delete actions.
+   When composing: To and Subject are editable with a Send action. The whole form
+   sits inside a branded card. */
+const MessageView = ({ state }: { state: any }) => {
+  const viewing: boolean = state.currentView === "message";
+  const composing: boolean = state.currentView === "compose";
 
-    {/* Date field: read-only, only shown when viewing a message. */}
-    { state.currentView === "message" &&
-      <InputBase defaultValue={ state.messageDate }
-        margin="dense" disabled={ true } fullWidth={ true }
-        className="messageInfoField" />
-    }
-    { state.currentView === "message" && <br /> }
+  return (
+    <form className="viewCard">
+      {/* Date: read-only, only shown when viewing a message. */}
+      { viewing &&
+        <TextField margin="dense" variant="outlined" fullWidth label="Date"
+          value={ state.messageDate ? new Date(state.messageDate).toLocaleString() : "" }
+          disabled
+          InputProps={{ className: "messageInfoField" }} />
+      }
 
-    {/* From field: read-only, only shown when viewing a message. */}
-    { state.currentView === "message" &&
-      <TextField margin="dense" variant="outlined" fullWidth={ true } label="From"
-        value={ state.messageFrom || "" }
-        disabled={ true }
-        InputProps={{ style: { color: "#000000" } }} />
-    }
-    { state.currentView === "message" && <br /> }
+      {/* From: read-only, only shown when viewing a message. */}
+      { viewing &&
+        <TextField margin="dense" variant="outlined" fullWidth label="From"
+          value={ state.messageFrom || "" }
+          disabled
+          InputProps={{ className: "messageInfoField" }} />
+      }
 
-    {/* To field: editable, only shown when composing.
-        id="messageTo" matches state.messageTo for fieldChangeHandler. */}
-    { state.currentView === "compose" &&
-      <TextField margin="dense" id="messageTo" variant="outlined"
-        fullWidth={ true } label="To"
-        value={ state.messageTo || "" }
-        InputProps={{ style: { color: "#000000" } }}
+      {/* To: editable, only shown when composing. */}
+      { composing &&
+        <TextField margin="dense" id="messageTo" variant="outlined" fullWidth label="To"
+          value={ state.messageTo || "" }
+          onChange={ state.fieldChangeHandler } />
+      }
+
+      {/* Subject: editable when composing, read-only when viewing. */}
+      <TextField margin="dense" id="messageSubject" label="Subject"
+        variant="outlined" fullWidth
+        value={ state.messageSubject || "" }
+        disabled={ viewing }
+        InputProps={ viewing ? { className: "messageInfoField" } : undefined }
         onChange={ state.fieldChangeHandler } />
-    }
-    { state.currentView === "compose" && <br /> }
 
-    {/* Subject: editable when composing, read-only when viewing. */}
-    <TextField margin="dense" id="messageSubject" label="Subject"
-      variant="outlined" fullWidth={ true }
-      value={ state.messageSubject || "" }
-      disabled={ state.currentView === "message" }
-      InputProps={{ style: { color: "#000000" } }}
-      onChange={ state.fieldChangeHandler } />
-    <br />
+      {/* Body: multiline. Editable when composing, read-only when viewing. */}
+      <TextField margin="dense" id="messageBody" variant="outlined"
+        fullWidth multiline rows={ 12 }
+        value={ state.messageBody || "" }
+        disabled={ viewing }
+        InputProps={ viewing ? { className: "messageInfoField" } : undefined }
+        onChange={ state.fieldChangeHandler } />
 
-    {/* Body: multiline textarea, editable when composing, read-only when viewing.
-        rows={12} sets the visible height. multiline renders an HTML textarea underneath. */}
-    <TextField margin="dense" id="messageBody" variant="outlined"
-      fullWidth={ true } multiline={ true } rows={ 12 }
-      value={ state.messageBody || "" }
-      disabled={ state.currentView === "message" }
-      InputProps={{ style: { color: "#000000" } }}
-      onChange={ state.fieldChangeHandler } />
+      <div style={{ marginTop: 14 }}>
+        {/* Compose action. */}
+        { composing &&
+          <Button variant="contained" color="primary"
+            startIcon={ <SendIcon /> }
+            onClick={ state.sendMessage }>
+            Send
+          </Button>
+        }
 
-    {/* Send button: only shown when composing. */}
-    { state.currentView === "compose" &&
-      <Button variant="contained" color="primary" size="small"
-        style={{ marginTop: 10 }}
-        onClick={ state.sendMessage }>
-        Send
-      </Button>
-    }
-
-    {/* Reply button: only shown when viewing a message. */}
-    { state.currentView === "message" &&
-      <Button variant="contained" color="primary" size="small"
-        style={{ marginTop: 10, marginRight: 10 }}
-        onClick={ () => state.showComposeMessage("reply") }>
-        Reply
-      </Button>
-    }
-
-    {/* Delete button: only shown when viewing a message. */}
-    { state.currentView === "message" &&
-      <Button variant="contained" color="primary" size="small"
-        style={{ marginTop: 10 }}
-        onClick={ state.deleteMessage }>
-        Delete
-      </Button>
-    }
-  </form>
-);
+        {/* Viewing actions. */}
+        { viewing &&
+          <Button variant="contained" color="primary"
+            startIcon={ <ReplyIcon /> }
+            style={{ marginRight: 10 }}
+            onClick={ () => state.showComposeMessage("reply") }>
+            Reply
+          </Button>
+        }
+        { viewing &&
+          <Button variant="outlined" color="secondary"
+            startIcon={ <DeleteIcon /> }
+            onClick={ state.deleteMessage }>
+            Delete
+          </Button>
+        }
+      </div>
+    </form>
+  );
+};
 
 export default MessageView;
