@@ -107,7 +107,7 @@ const Dashboard = () => {
                   { r.preferred.map((slot, j) => (
                     <div className="slot" key={ j }>
                       <EventIcon fontSize="inherit" style={{ marginRight: 6, color: "#00b9ff" }} />
-                      <span className="slotDate">{ slot.date || "—" }</span>
+                      <span className="slotDate">{ slot.date || "-" }</span>
                       { slot.availability &&
                         <span className="slotAvail">· { slot.availability }</span>
                       }
