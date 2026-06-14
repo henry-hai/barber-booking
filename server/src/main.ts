@@ -12,6 +12,7 @@ import * as IMAP from "./IMAP";                                       // IMAP Wo
 import * as SMTP from "./SMTP";                                       // SMTP Worker
 import * as Contacts from "./contacts";                               // Contacts Worker
 import { IContact } from "./contacts";                                // IContact type used in endpoint handlers
+import * as Appointments from "./Appointments";                       // Appointments Worker (Google Sheets)
 
 const app: Express = express();                                       // creates the Express application instance
 
@@ -100,6 +101,22 @@ app.post("/messages", async (inRequest: Request, inResponse: Response) => {
     inResponse.send("ok");
   } catch (inError) {
     inResponse.send("error");
+  }
+});
+
+/* GET /appointments
+   Returns a JSON array of booking requests from the Google Sheet that the
+   n8n Barber Log workflow writes to. Returns [] if sheets is unconfigured. */
+app.get("/appointments", async (inRequest: Request, inResponse: Response) => {
+  try {
+    const appointmentsWorker: Appointments.Worker =
+      new Appointments.Worker(serverInfo);
+    const appointments: Appointments.IBookingRequest[] =
+      await appointmentsWorker.listAppointments();
+    inResponse.json(appointments);
+  } catch (inError) {
+    console.error("GET /appointments error:", inError);
+    inResponse.status(500).json([]);
   }
 });
 
