@@ -55,29 +55,26 @@ export function createState(inParentComponent: any) {
       this.state.getMessages(inPath);
     }.bind(inParentComponent),
 
-    /* Fetches message headers for the given mailbox path from the server. */
+    /* Fetches message headers for the given mailbox path from the server.
+       The whole array is set in a single setState call: React 18 batches
+       updates, so adding messages one-by-one in a loop would collapse them
+       into just the last item. try/finally guarantees the "Please Wait"
+       loader is hidden even if the request fails (otherwise it hangs). */
     getMessages: async function(inPath: string): Promise<void> {
       this.state.showHidePleaseWait(true);
-      const imapWorker: IMAP.Worker = new IMAP.Worker();
-      const messages: IMAP.IMessage[] = await imapWorker.listMessages(inPath);
-      this.state.showHidePleaseWait(false);
-      this.state.clearMessages();
-      messages.forEach((inMessage: IMAP.IMessage) => {
-        this.state.addMessageToList(inMessage);
-      });
-    }.bind(inParentComponent),
-
-    /* Clears the message list by setting an empty array. */
-    clearMessages: function(): void {
-      this.setState({ messages: [] });
-    }.bind(inParentComponent),
-
-    /* Appends a message to the messages array in state. */
-    addMessageToList: function(inMessage: IMAP.IMessage): void {
-      const cl = this.state.messages.slice(0);
-      cl.push({ id: inMessage.id, date: inMessage.date,
-        from: inMessage.from, subject: inMessage.subject });
-      this.setState({ messages: cl });
+      try {
+        const imapWorker: IMAP.Worker = new IMAP.Worker();
+        const messages: IMAP.IMessage[] = await imapWorker.listMessages(inPath);
+        /* On a server-side failure the API responds with the string "error".
+           Guard against that (and anything non-array) so the UI shows an empty
+           list instead of crashing when .map() is called on a non-array. */
+        this.setState({ messages: Array.isArray(messages) ? messages : [] });
+      } catch (inError) {
+        console.error("Error loading messages:", inError);
+        this.setState({ messages: [] });
+      } finally {
+        this.state.showHidePleaseWait(false);
+      }
     }.bind(inParentComponent),
 
     /* Sets state to show a contact's details in the view area. */
