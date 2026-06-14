@@ -6,6 +6,7 @@ dist/
 
 # Sensitive credentials
 serverInfo.json
+serviceAccount.json
 
 # OS files
 Thumbs.db

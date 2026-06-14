@@ -8,5 +8,9 @@
     "host": "imap.gmail.com",
     "port": 993,
     "auth": { "user": "your-email@gmail.com", "pass": "your-app-password" }
+  },
+  "sheets": {
+    "spreadsheetId": "your-google-sheet-id",
+    "range": "Sheet1!A:K"
   }
 }
