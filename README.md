@@ -1,6 +1,6 @@
 # Barbering Booking Platform
 
-A full-stack barbering booking platform serving 300+ clients, built with React, Node.js, Express, TypeScript, and Webpack. The public site handles appointment requests through EmailJS, with an n8n automation layer that turns booking emails into structured rows in Google Sheets. A separate Express API powers a React mail client using Gmail over SMTP/IMAP.
+A full-stack barbering booking platform serving 300+ clients, built with React, Node.js, Express, TypeScript, and Webpack. The public site handles appointment requests through EmailJS, with an n8n automation layer that turns booking emails into structured rows in Google Sheets. A separate Express API powers a React app with two views: an **appointments dashboard** that reads the booking data live via the Google Sheets API, and a mail client that uses Gmail over SMTP/IMAP.
 
 ## Live static site
 
@@ -16,6 +16,12 @@ The customer-facing barbering site is deployed with **GitHub Pages** from a dedi
 <img width="1906" height="972" alt="image" src="https://github.com/user-attachments/assets/d444d530-1ec9-45d4-bafe-53a3180213d7" />
 <img width="1906" height="1038" alt="image" src="https://github.com/user-attachments/assets/da5d6a0d-d0f0-46a2-94ba-268e4bb50163" />
 
+## Appointments Dashboard
+
+A React dashboard reads booking requests **live** from the Google Sheet that the n8n workflow appends to, using the Google Sheets API authenticated with a read-only GCP service account. It shows headline stats and a card per request (client name, submitted time, preferred slots, and notes). The booking data stays in Google Sheets as the single source of truth, viewable on a phone, while the dashboard surfaces it inside the app. *(Client phone numbers and last names redacted below.)*
+
+![Appointments dashboard](screenshots/dashboard.png)
+
 ## Architecture
 
 ```
@@ -27,7 +33,8 @@ Appointment form  -->  EmailJS  -->  inbox notifications
                       +-->  n8n  -->  Gmail trigger -> JS transform -> Google Sheets
 
 Browser  -->  React SPA (client/)  -->  Express API (server/)  -->  Gmail (SMTP/IMAP)
-                                              |
+              Dashboard + Mailroom            |    |
+                                              |    +-->  Google Sheets API (service account)
                                           NeDB (contacts)
 ```
 
@@ -35,7 +42,7 @@ Browser  -->  React SPA (client/)  -->  Express API (server/)  -->  Gmail (SMTP/
 
 **server/** -- RESTful API built with Node.js and Express. Handles email operations via SMTP (NodeMailer) and IMAP, with an embedded NeDB database for persistent contact storage.
 
-**client/** -- React SPA with Material-UI components and CSS Grid layout. Communicates with the server via Axios for mailbox management, message handling, and contact CRUD operations.
+**client/** -- React SPA with Material-UI components and CSS Grid layout, split into two views via a top-bar toggle: an **appointments dashboard** (booking requests + stats from the Google Sheets API) and a **mail client** (mailboxes, messages, and contact CRUD). Communicates with the server via Axios.
 
 ## Tech Stack
 
@@ -53,6 +60,7 @@ Browser  -->  React SPA (client/)  -->  Express API (server/)  -->  Gmail (SMTP/
 | Axios | HTTP client for API communication |
 | EmailJS | Client-side appointment form: sends booking requests to email |
 | n8n | Automation workflow: Gmail trigger → JavaScript transform → Google Sheets |
+| Google Sheets API | Reads booking data into the dashboard via a read-only GCP service account |
 
 ## Getting Started
 
@@ -102,6 +110,7 @@ Open `http://localhost:8080` to view the React client (served by the backend).
 
 | Method | Endpoint | Description |
 |---|---|---|
+| GET | `/appointments` | List booking requests from the Google Sheet (newest first) |
 | GET | `/mailboxes` | List all mailboxes |
 | GET | `/mailboxes/:mailbox` | List messages in a mailbox |
 | GET | `/messages/:mailbox/:id` | Get a specific message |
