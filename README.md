@@ -18,7 +18,7 @@ The customer-facing barbering site is deployed with **GitHub Pages** from a dedi
 
 ## Appointments Dashboard
 
-A React dashboard reads booking requests **live** from the Google Sheet that the n8n workflow appends to, using the Google Sheets API authenticated with a read-only GCP service account. It shows headline stats and a card per request (client name, submitted time, preferred slots, and notes). The booking data stays in Google Sheets as the single source of truth — viewable on a phone — while the dashboard surfaces it inside the app. *(Client phone numbers and last names redacted below.)*
+A React dashboard reads booking requests **live** from the Google Sheet that the n8n workflow appends to, using the Google Sheets API authenticated with a read-only GCP service account. It shows headline stats and a card per request (client name, submitted time, preferred slots, and notes). The booking data stays in Google Sheets as the single source of truth, viewable on a phone, while the dashboard surfaces it inside the app. *(Client phone numbers and last names redacted below.)*
 
 ![Appointments dashboard](screenshots/dashboard.png)
 
