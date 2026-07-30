@@ -36,15 +36,12 @@ export default function SitePreview() {
   const [fit, setFit] = useState<HeroFit>("high");
   const [estColor, setEstColor] = useState<EstColor>("deep");
   const [estBig, setEstBig] = useState(true);
-  const [estFlip, setEstFlip] = useState(false);
   const heroOption = heroOptions.find((option) => option.id === heroId) ?? heroOptions[0];
   const fitOption = heroFits.find((option) => option.id === fit) ?? heroFits[0];
   /* KSG 1 cannot be both hero and services photo. */
   const menuPhoto = heroOption.id === "ksg1" ? servicesPhotoAlt : servicesPhoto;
   /* The frames for a multi-panel fit, or null when this hero has no set. */
-  const panels = fit === "triptych" ? heroOption.triptych
-    : fit === "diptych" ? heroOption.diptych
-    : null;
+  const panels = fit === "triptych" ? heroOption.triptych : null;
 
   return (
     <div className="bg-[#f5f2ee] text-neutral-900">
@@ -113,15 +110,6 @@ export default function SitePreview() {
           ))}
           <button
             type="button"
-            onClick={() => setEstFlip((value) => !value)}
-            className={`ml-3 rounded px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors ${
-              estFlip ? "bg-[#0be6f9] text-neutral-900" : "text-neutral-400 hover:bg-white/10 hover:text-white"
-            }`}
-          >
-            {estFlip ? "Light at top" : "Light at base"}
-          </button>
-          <button
-            type="button"
             onClick={() => setEstBig((value) => !value)}
             className={`ml-3 rounded px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors ${
               estBig ? "bg-white text-neutral-900" : "text-neutral-400 hover:bg-white/10 hover:text-white"
@@ -139,7 +127,7 @@ export default function SitePreview() {
       {/* nav */}
       <header className="sticky top-[92px] z-50 border-b border-neutral-900/10 bg-[#f5f2ee]/92 backdrop-blur">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4">
-          <Logo size={54} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estFlip={estFlip} />
+          <Logo size={54} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} />
           <nav className="hidden items-center gap-9 md:flex">
             {nav.map((item) => (
               <a
@@ -193,16 +181,19 @@ export default function SitePreview() {
               ))}
             </div>
           </>
-        ) : fit === "full" || fit === "triptych" || fit === "diptych" ? (
+        ) : fit === "full" || fit === "triptych" ? (
           <>
             {/* Blurred copy of the same photograph fills the sides. */}
             <Image
               key={`${heroOption.src}-bg`}
               src={heroOption.src} alt="" fill priority sizes="100vw"
-              /* Pulled up and scaled harder so the fill is mostly hair rather
-                 than ears and blurred skin. */
-              style={{ objectPosition: "50% 4%" }}
-              className="scale-150 object-cover blur-[44px] saturate-[1.2]"
+              /*
+                Sampled from a flat region of the same photograph and scaled
+                far past the frame, so the fill reads as a colour wash drawn
+                from the image rather than as recognisable blurred anatomy.
+              */
+              style={{ objectPosition: heroOption.backdropFocus }}
+              className="scale-[2.6] object-cover blur-[64px] saturate-[1.1]"
             />
             <div className="absolute inset-0 flex justify-center">
               <div className="relative h-full" style={{ aspectRatio: "4 / 5" }}>
@@ -361,7 +352,7 @@ export default function SitePreview() {
 
       <footer className="border-t border-neutral-900/10">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-6 px-6 py-12">
-          <Logo size={46} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estFlip={estFlip} />
+          <Logo size={46} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} />
           {/* Always the current year, not the founding year. */}
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
             &copy; {new Date().getFullYear()} {shop.name}
