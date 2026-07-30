@@ -11,13 +11,10 @@
  */
 
 /*
- * The four artwork photos have not been added to the repo yet. While this is
- * true the Artwork tab renders labelled placeholder tiles naming the file each
- * one is waiting for. Drop the four files into web/public/img/artwork/ using
- * the names in `artworkPhotos` below, set this to false, and the tab renders
- * them for real -- no other change needed.
+ * Set to true to render labelled placeholder tiles in place of the artwork,
+ * naming the file each one is waiting for. Used while the images were pending.
  */
-export const artworkPending = true;
+export const artworkPending = false;
 
 export interface IGalleryPhoto {
   src: string;
@@ -83,13 +80,31 @@ const haircutRowTwo: IGalleryPhoto[] = [
   { src: "/img/34_Hoang_5.jpg", alt: "Mid fade, final look" }
 ];
 
-/* Artwork is a single row at one aspect ratio (4:5), unlike the two-row
-   Haircuts tab. Replace the alt text alongside the files. */
+/*
+ * "The Godfather" -- graphite on a dictionary page, drawn over the entries
+ * running from `god` to `godfather`. Started at 16, revisited and finished at
+ * 24. The four photographs are of the same piece.
+ *
+ * Single row at one aspect ratio (4:5), unlike the two-row Haircuts tab. The
+ * originals are 4:5 already, so nothing crops.
+ */
 const artworkPhotos: IGalleryPhoto[] = [
-  { src: "/img/artwork/artwork-1.jpg", alt: "Artwork by Henry Hai" },
-  { src: "/img/artwork/artwork-2.jpg", alt: "Artwork by Henry Hai" },
-  { src: "/img/artwork/artwork-3.jpg", alt: "Artwork by Henry Hai" },
-  { src: "/img/artwork/artwork-4.jpg", alt: "Artwork by Henry Hai" }
+  {
+    src: "/img/artwork/godfather-1.jpg",
+    alt: "The Godfather, graphite on a dictionary page: Vito Corleone in three-quarter profile, drawn over the dictionary's god entries"
+  },
+  {
+    src: "/img/artwork/godfather-2.jpg",
+    alt: "Detail of the same drawing: the cupped hand, rendered across the entries for god, goddamn and godchild"
+  },
+  {
+    src: "/img/artwork/godfather-3.jpg",
+    alt: "Detail of the same drawing: the cat resting in his hands, sitting directly above the printed definition of godfather"
+  },
+  {
+    src: "/img/artwork/godfather-4.jpg",
+    alt: "Top of the page, signed Henry Hai Nguyen, with the dictionary entry for godfather boxed and underlined"
+  }
 ];
 
 export const galleryTabs: IGalleryTab[] = [

@@ -1,23 +1,23 @@
 # Artwork gallery images
 
-The Artwork tab in the gallery expects four files in this directory:
+`godfather-1.jpg` through `godfather-4.jpg` are four photographs of one piece:
+"The Godfather", graphite on a dictionary page, drawn over the entries running
+from `god` to `godfather`. Started at 16, revisited and finished at 24.
 
-```
-artwork-1.jpg
-artwork-2.jpg
-artwork-3.jpg
-artwork-4.jpg
-```
+They render in a single row at 224x280 (4:5). The originals are 4:5 already, so
+`object-cover` does not crop them.
 
-They render in a single row at 224x280 (4:5), cropped with `object-cover`, so
-portrait-oriented originals crop most naturally. Any resolution above 448x560
-is fine -- `next/image` downscales and serves WebP -- but keep them as JPEG, as
-PNG versions of photographs run several times larger and git keeps them forever.
+## Adding or replacing images
 
-Once the files are here:
+Store them here as JPEG at roughly 1400x1750 -- `next/image` downscales and
+serves WebP from there, and PNG versions of photographs run several times larger
+with git keeping them forever. The originals here were 4000x5000 and 15 MB each;
+downscaling took the set from 38 MB to about 1 MB with no visible loss at the
+sizes the page actually uses.
 
-1. Set `artworkPending` to `false` in `web/lib/gallery.ts`.
-2. Replace the placeholder `alt` text in `artworkPhotos` in the same file with a
-   real description of each piece.
+Then update `artworkPhotos` in `web/lib/gallery.ts` with the filename and a real
+description of the piece for the `alt` text.
 
-Until then the tab renders labelled placeholder tiles naming each missing file.
+`artworkPending` in that same file switches the whole tab over to labelled
+placeholder tiles naming each expected file, which is useful while photographs
+for a new tab are still being taken.

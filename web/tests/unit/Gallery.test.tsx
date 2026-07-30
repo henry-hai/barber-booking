@@ -66,14 +66,15 @@ describe("Gallery", () => {
     expect(artwork.rows[0].sizeClasses).toBe("w-56 h-[280px]");
   });
 
-  it("names the missing file on each Artwork placeholder", async () => {
+  it("renders the four artwork images with descriptive alt text", async () => {
     const user = userEvent.setup();
     render(<Gallery />);
     await user.click(screen.getByRole("tab", { name: "Artwork" }));
 
-    const panel = screen.getByRole("tabpanel");
-    for (const photo of artwork.rows[0].photos) {
-      expect(within(panel).getByText(`public${photo.src}`)).toBeInTheDocument();
+    const images = within(screen.getByRole("tabpanel")).getAllByRole("img");
+    expect(images).toHaveLength(4);
+    for (const image of images) {
+      expect(image.getAttribute("alt")?.length ?? 0).toBeGreaterThan(0);
     }
   });
 
