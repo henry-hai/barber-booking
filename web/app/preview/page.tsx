@@ -103,8 +103,7 @@ export default function SitePreview() {
           fill
           priority
           sizes="100vw"
-          style={{ objectPosition: heroOption.focus }}
-          className={`object-cover ${heroOption.blur ? "scale-105 blur-[3px]" : ""}`}
+          className={`object-cover ${heroOption.focusMobile} ${heroOption.focusDesktop} ${heroOption.blur ? "scale-105 blur-[3px]" : ""}`}
         />
         <div className="absolute inset-0" style={{ backgroundColor: `rgba(15,15,17,${heroOption.scrim})` }} />
         <div className="absolute inset-0 flex items-center">
@@ -119,8 +118,11 @@ export default function SitePreview() {
                 className="mt-6 max-w-3xl text-[clamp(2.4rem,6vw,4.75rem)] leading-[1.02] tracking-[-0.025em] text-white"
                 style={{ fontFamily: SERIF }}
               >
-                Personalized, luxury haircuts.
+                {shop.name}
               </h1>
+              <p className="mt-5 max-w-xl text-[clamp(1rem,1.6vw,1.25rem)] leading-relaxed text-white/75">
+                Personalized, luxury haircuts.
+              </p>
             </Reveal>
             <Reveal delay={260}>
               {/* Hover fills the underline cyan and thickens it. Going black on a
@@ -152,23 +154,19 @@ export default function SitePreview() {
 
           <main className="min-w-0 flex-1">
 
+            {/* No prose. The record stands on its own and says less, which is
+                the point of the section. */}
             <Section id="about" number="01" title="About">
               <Reveal>
-                <p className="max-w-2xl text-[19px] leading-[1.7] text-neutral-700" style={{ fontFamily: SERIF }}>
-                  I have been cutting hair since {shop.est}. Every cut is booked one
-                  at a time, and every haircut photograph on this page is my own.
-                </p>
-              </Reveal>
-              <Reveal delay={120}>
-                <dl className="mt-10 max-w-lg">
+                <dl className="max-w-xl">
                   {[
                     ["Cutting since", String(shop.est)],
-                    ["Locations", "Milpitas, Irvine"],
+                    ["Locations", "Milpitas & Irvine"],
                     ["Photography", "In-house"]
                   ].map(([key, value]) => (
-                    <div key={key} className="flex gap-8 border-b border-neutral-300 py-2.5 first:border-t">
-                      <dt className="w-36 shrink-0 font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">{key}</dt>
-                      <dd className="text-[14px] text-neutral-900">{value}</dd>
+                    <div key={key} className="flex items-baseline gap-8 border-b border-neutral-300 py-4 first:border-t">
+                      <dt className="w-40 shrink-0 font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">{key}</dt>
+                      <dd className="text-[17px] text-neutral-900" style={{ fontFamily: SERIF }}>{value}</dd>
                     </div>
                   ))}
                 </dl>

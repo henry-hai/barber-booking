@@ -45,7 +45,12 @@ export interface IHeroOption {
   src: string;
   label: string;
   note: string;
-  focus: string;
+  /* Tailwind object-position classes. These are 4:5 portraits being cropped
+     into a banner, and a phone's tall viewport keeps far more of the frame than
+     a desktop's wide one, so the two need different crops to show the same
+     part of the photograph. */
+  focusMobile: string;
+  focusDesktop: string;
   scrim: number;
   blur: boolean;
 }
@@ -66,8 +71,9 @@ export const heroOptions: IHeroOption[] = [
     id: "adrian3",
     src: "/img/10_Adrian_3.JPG",
     label: "Adrian 3",
-    note: "Back of the head, blue braids. Mysterious, and the blue already agrees with the cyan. High key, so it carries a heavier scrim and a light blur.",
-    focus: "50% 34%",
+    note: "Back of the head, blue braids. The blue already agrees with the cyan. Desktop pulls the crop up to hold more of the top of the frame; the phone crop is left alone.",
+    focusMobile: "object-[50%_34%]",
+    focusDesktop: "md:object-[50%_12%]",
     scrim: 0.5,
     blur: true
   },
@@ -76,7 +82,8 @@ export const heroOptions: IHeroOption[] = [
     src: "/img/20_Cam_2.jpg",
     label: "Cam 2",
     note: "The most composed of the set. Reads luxury rather than edge.",
-    focus: "50% 38%",
+    focusMobile: "object-[50%_38%]",
+    focusDesktop: "md:object-[50%_18%]",
     scrim: 0.42,
     blur: false
   },
@@ -85,7 +92,8 @@ export const heroOptions: IHeroOption[] = [
     src: "/img/26_Hoang_1.jpg",
     label: "Hoang 1",
     note: "Harder and more street. Furthest from quiet luxury.",
-    focus: "50% 40%",
+    focusMobile: "object-[50%_40%]",
+    focusDesktop: "md:object-[50%_20%]",
     scrim: 0.42,
     blur: false
   },
@@ -94,7 +102,8 @@ export const heroOptions: IHeroOption[] = [
     src: "/img/4_KSG_1.JPG",
     label: "KSG 1",
     note: "Simple and clean. Promoting this to hero moves Murthi 1 into the services slot.",
-    focus: "50% 32%",
+    focusMobile: "object-[50%_32%]",
+    focusDesktop: "md:object-[50%_16%]",
     scrim: 0.48,
     blur: false
   }

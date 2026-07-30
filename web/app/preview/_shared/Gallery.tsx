@@ -88,7 +88,26 @@ function Row({
   );
 }
 
-/* Full-screen viewer. Escape closes, arrows step through the set. */
+/*
+ * Full-screen viewer. Escape closes, arrows step through the set.
+ *
+ * On the background colour: near-black is the industry default, and for a good
+ * reason. A dark surround removes competing luminance so the eye reads the
+ * photograph's own tonal range, which is why Lightroom, Instagram and most
+ * museum viewers all go dark. Light surrounds make bright images look flat.
+ *
+ * This uses bone anyway, because two things about this particular gallery push
+ * the other way: the site is bone throughout, and a black overlay on a phone
+ * reads as the browser breaking rather than as a designed state. The drawing
+ * scans are on cream paper and sit better on bone too.
+ *
+ * The cost is real: the haircut photographs have white capes and pale
+ * backgrounds that now sit closer to the surround, so each image carries a
+ * hairline border and a soft shadow to hold its edge. If the loss of punch
+ * bothers you, flipping SURFACE and the two text tones back to near-black is a
+ * three-line change.
+ */
+const SURFACE = "#f5f2ee";
 function Lightbox({
   photos, index, onClose, onStep
 }: {
@@ -111,16 +130,17 @@ function Lightbox({
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-neutral-950/95 p-4 sm:p-10"
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-12"
+      style={{ backgroundColor: SURFACE }}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <button
         type="button" aria-label="Close" onClick={onClose}
-        className="absolute right-5 top-5 z-10 rounded-full p-3 text-white/70 transition-colors hover:text-white"
+        className="absolute right-5 top-5 z-10 rounded-full bg-white/70 p-3 text-neutral-700 shadow-sm backdrop-blur transition-colors hover:text-neutral-900"
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M5 5 L19 19 M19 5 L5 19" />
         </svg>
       </button>
@@ -131,21 +151,21 @@ function Lightbox({
           type="button"
           aria-label={delta === -1 ? "Previous" : "Next"}
           onClick={(event) => { event.stopPropagation(); onStep(delta); }}
-          className={`absolute top-1/2 z-10 -translate-y-1/2 rounded-full p-4 text-white/60 transition-colors hover:text-white ${delta === -1 ? "left-3" : "right-3"}`}
+          className={`absolute top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/70 p-4 text-neutral-700 shadow-sm backdrop-blur transition-colors hover:text-neutral-900 ${delta === -1 ? "left-3" : "right-3"}`}
         >
           <Arrow direction={delta === -1 ? "left" : "right"} />
         </button>
       ))}
 
-      <div className="relative h-full w-full" onClick={(event) => event.stopPropagation()}>
-        <Image
-          src={photos[index]} alt="" fill sizes="100vw"
-          className="object-contain"
-          priority
-        />
+      {/* Border and shadow so pale photographs keep an edge against the bone. */}
+      <div
+        className="relative h-full w-full overflow-hidden rounded-sm border border-neutral-900/10 shadow-[0_2px_40px_rgba(38,48,76,0.12)]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <Image src={photos[index]} alt="" fill sizes="100vw" className="object-contain" priority />
       </div>
 
-      <p className="absolute bottom-5 left-1/2 -translate-x-1/2 font-mono text-[11px] uppercase tracking-[0.2em] text-white/45">
+      <p className="absolute bottom-5 left-1/2 -translate-x-1/2 font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
         {index + 1} / {photos.length}
       </p>
     </div>
