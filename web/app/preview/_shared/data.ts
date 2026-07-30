@@ -61,9 +61,7 @@ export interface IHeroOption {
   focusLow: string;
   scrim: number;
   blur: boolean;
-  /* Frames for the two triptych fits. */
-  triptych?: string[];
-  triptych2?: string[];
+
   /* Where the blurred backdrop is sampled from for the full frame fit. Aimed at
      a flat, uniform part of the photograph so the fill reads as a wash rather
      than as recognisable blurred anatomy. */
@@ -92,6 +90,18 @@ export const heroFits = [
 export type HeroFit = typeof heroFits[number]["id"];
 
 /*
+ * The triptych compositions.
+ *
+ * These are fixed sets, not a property of whichever hero is selected. Hanging
+ * them off one hero meant picking any other hero silently fell back to a single
+ * photograph, so choosing Triptych appeared to do nothing.
+ */
+export const TRIPTYCHS: Record<"triptych" | "triptych2", string[]> = {
+  triptych: ["/img/20_Cam_2.jpg", "/img/10_Adrian_3.JPG", "/img/26_Hoang_1.jpg"],
+  triptych2: ["/img/20_Cam_2.jpg", "/img/10_Adrian_3.JPG", "/img/4_KSG_1.JPG"]
+};
+
+/*
  * Hero candidates, all your own photographs.
  *
  * The old hero was a watermarked Stocksy stock image, so it had to go. The
@@ -113,9 +123,7 @@ export const heroOptions: IHeroOption[] = [
     focusLow: "18% 30%",
     scrim: 0.5,
     blur: true,
-    backdropFocus: "4% 46%",
-    triptych: ["/img/20_Cam_2.jpg", "/img/10_Adrian_3.JPG", "/img/26_Hoang_1.jpg"],
-    triptych2: ["/img/20_Cam_2.jpg", "/img/10_Adrian_3.JPG", "/img/4_KSG_1.JPG"]
+    backdropFocus: "4% 46%"
   },
   {
     id: "cam2",
