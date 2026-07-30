@@ -10,6 +10,15 @@
  * panels are both driven off this array, so nothing else needs to change.
  */
 
+/*
+ * The four artwork photos have not been added to the repo yet. While this is
+ * true the Artwork tab renders labelled placeholder tiles naming the file each
+ * one is waiting for. Drop the four files into web/public/img/artwork/ using
+ * the names in `artworkPhotos` below, set this to false, and the tab renders
+ * them for real -- no other change needed.
+ */
+export const artworkPending = true;
+
 export interface IGalleryPhoto {
   src: string;
   alt: string;
@@ -24,6 +33,8 @@ export interface IGalleryRow {
   /* Tailwind sizing classes matching width/height above. */
   sizeClasses: string;
   photos: IGalleryPhoto[];
+  /* Render labelled placeholders instead of the images. See `artworkPending`. */
+  pending?: boolean;
 }
 
 export interface IGalleryTab {
@@ -72,6 +83,15 @@ const haircutRowTwo: IGalleryPhoto[] = [
   { src: "/img/34_Hoang_5.jpg", alt: "Mid fade, final look" }
 ];
 
+/* Artwork is a single row at one aspect ratio (4:5), unlike the two-row
+   Haircuts tab. Replace the alt text alongside the files. */
+const artworkPhotos: IGalleryPhoto[] = [
+  { src: "/img/artwork/artwork-1.jpg", alt: "Artwork by Henry Hai" },
+  { src: "/img/artwork/artwork-2.jpg", alt: "Artwork by Henry Hai" },
+  { src: "/img/artwork/artwork-3.jpg", alt: "Artwork by Henry Hai" },
+  { src: "/img/artwork/artwork-4.jpg", alt: "Artwork by Henry Hai" }
+];
+
 export const galleryTabs: IGalleryTab[] = [
   {
     id: "haircuts",
@@ -90,6 +110,20 @@ export const galleryTabs: IGalleryTab[] = [
         height: 224,
         sizeClasses: "w-56 h-56",
         photos: haircutRowTwo
+      }
+    ]
+  },
+  {
+    id: "artwork",
+    label: "Artwork",
+    rows: [
+      {
+        id: "artwork-container",
+        width: 224,
+        height: 280,
+        sizeClasses: "w-56 h-[280px]",
+        photos: artworkPhotos,
+        pending: artworkPending
       }
     ]
   }
