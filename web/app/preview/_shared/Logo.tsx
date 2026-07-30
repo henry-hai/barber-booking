@@ -241,7 +241,8 @@ export function Logo({
   lines = ["Henry Hai", "Studio"],
   showEst = true,
   estScale = 1,
-  estColor = "gradient"
+  estColor = "gradient",
+  estFlip = false
 }: {
   size?: number;
   variant?: LogoVariant;
@@ -262,10 +263,21 @@ export function Logo({
    */
   estScale?: number;
   estColor?: EstColor;
+  /*
+   * Flips which end of the ramp is dark.
+   *
+   * Measured, the default runs dark at the top to bright at the base:
+   * rasterised, the deep ramp samples luma 69 at the top against 123 at the
+   * base. But the pale-blue-to-vivid-cyan pair reads ambiguously at 6 to 9px,
+   * where the paler top can look "lighter" than the more saturated base even
+   * though it is objectively darker. Rather than argue the measurement, this
+   * exists so the direction can be chosen by eye.
+   */
+  estFlip?: boolean;
 }) {
   const scheme = EST_COLORS[estColor];
-  const estTop = accentEnd ?? scheme.from;
-  const estBottom = accent ?? scheme.to;
+  const estTop = accentEnd ?? (estFlip ? scheme.to : scheme.from);
+  const estBottom = accent ?? (estFlip ? scheme.from : scheme.to);
 
   /* Solve the name line size so the whole block lands at TEXT_BLOCK of the
      mark's height: the name lines, the gap, and Est. itself. */
