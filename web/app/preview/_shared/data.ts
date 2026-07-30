@@ -61,9 +61,12 @@ export interface IHeroOption {
   focusLow: string;
   scrim: number;
   blur: boolean;
-  /* Frames of the same sitting, for the triptych and diptych fits. */
+  /* Frames for the triptych fit. */
   triptych?: string[];
-  diptych?: string[];
+  /* Where the blurred backdrop is sampled from for the full frame fit. Aimed at
+     a flat, uniform part of the photograph so the fill reads as a wash rather
+     than as recognisable blurred anatomy. */
+  backdropFocus: string;
 }
 
 /*
@@ -81,8 +84,7 @@ export const heroFits = [
   { id: "high", label: "High", note: "Shifted right so the signature clears the edge, and raised, though not to the very top of the frame." },
   { id: "low", label: "Low", note: "Shifted right and dropped, leaving space above the head. Closest to how the phone reads." },
   { id: "full", label: "Full frame", note: "The whole 4:5 photograph, uncropped, with the sides filled by a blurred copy of itself. No pixels invented." },
-  { id: "triptych", label: "Triptych", note: "Three frames of the same sitting, Adrian 2, 1 and 3. Falls back to full frame where a set does not exist." },
-  { id: "diptych", label: "Diptych", note: "Two frames, Adrian 1 and 3, split down the middle. Falls back to full frame where a set does not exist." }
+  { id: "triptych", label: "Triptych", note: "Cam 2, Adrian 3 and Hoang 1 across the banner." }
 ] as const;
 
 export type HeroFit = typeof heroFits[number]["id"];
@@ -109,8 +111,8 @@ export const heroOptions: IHeroOption[] = [
     focusLow: "18% 30%",
     scrim: 0.5,
     blur: true,
-    triptych: ["/img/9_Adrian_2.JPG", "/img/8_Adrian_1.JPG", "/img/10_Adrian_3.JPG"],
-    diptych: ["/img/8_Adrian_1.JPG", "/img/10_Adrian_3.JPG"]
+    backdropFocus: "6% 22%",
+    triptych: ["/img/20_Cam_2.jpg", "/img/10_Adrian_3.JPG", "/img/26_Hoang_1.jpg"]
   },
   {
     id: "cam2",
@@ -120,6 +122,7 @@ export const heroOptions: IHeroOption[] = [
     focusMobile: "50% 38%",
     focusHigh: "34% 10%",
     focusLow: "34% 30%",
+    backdropFocus: "8% 20%",
     scrim: 0.42,
     blur: false
   },
@@ -131,6 +134,7 @@ export const heroOptions: IHeroOption[] = [
     focusMobile: "50% 40%",
     focusHigh: "34% 10%",
     focusLow: "34% 32%",
+    backdropFocus: "8% 20%",
     scrim: 0.42,
     blur: false
   },
@@ -142,6 +146,7 @@ export const heroOptions: IHeroOption[] = [
     focusMobile: "50% 32%",
     focusHigh: "34% 10%",
     focusLow: "34% 28%",
+    backdropFocus: "8% 20%",
     scrim: 0.48,
     blur: false
   }

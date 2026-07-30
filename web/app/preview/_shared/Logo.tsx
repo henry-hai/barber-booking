@@ -83,7 +83,7 @@ export const EST_COLORS: Record<EstColor, { from: string, to: string, label: str
    * getting lighter downward. These stops keep that: luma 71 to 128, so the
    * base is unmistakably the brighter end.
    */
-  deep: { from: "#12546e", to: "#0aa8c6", label: "Deep gradient" },
+  deep: { from: "#0d3f57", to: "#22c3dd", label: "Deep gradient" },
   darkcyan: { from: "#0b6f85", to: "#0aa3bd", label: "Dark cyan" },
   ink: { from: WORDMARK_INK, to: WORDMARK_INK, label: "Navy ink" },
   black: { from: "#141414", to: "#141414", label: "Near black" }
@@ -241,8 +241,7 @@ export function Logo({
   lines = ["Henry Hai", "Studio"],
   showEst = true,
   estScale = 1,
-  estColor = "gradient",
-  estFlip = false
+  estColor = "gradient"
 }: {
   size?: number;
   variant?: LogoVariant;
@@ -263,21 +262,13 @@ export function Logo({
    */
   estScale?: number;
   estColor?: EstColor;
-  /*
-   * Flips which end of the ramp is dark.
-   *
-   * Measured, the default runs dark at the top to bright at the base:
-   * rasterised, the deep ramp samples luma 69 at the top against 123 at the
-   * base. But the pale-blue-to-vivid-cyan pair reads ambiguously at 6 to 9px,
-   * where the paler top can look "lighter" than the more saturated base even
-   * though it is objectively darker. Rather than argue the measurement, this
-   * exists so the direction can be chosen by eye.
-   */
-  estFlip?: boolean;
 }) {
   const scheme = EST_COLORS[estColor];
-  const estTop = accentEnd ?? (estFlip ? scheme.to : scheme.from);
-  const estBottom = accent ?? (estFlip ? scheme.from : scheme.to);
+  /* `from` is always the top stop and `to` always the base. Fixed, not
+     switchable: a toggle here labelled its own state rather than its action,
+     so clicking it turned the correct default into the wrong one. */
+  const estTop = accentEnd ?? scheme.from;
+  const estBottom = accent ?? scheme.to;
 
   /* Solve the name line size so the whole block lands at TEXT_BLOCK of the
      mark's height: the name lines, the gap, and Est. itself. */
