@@ -12,7 +12,9 @@ import {
   Iceland, Aldrich, Electrolize, Quantico, Jura, Share_Tech,
   Nova_Square, Syncopate, Michroma, Saira
 } from "next/font/google";
-import { Logo, LogoMark, CYAN_BOTTOM, CYAN_TOP, type LogoVariant } from "../_shared/Logo";
+import {
+  Logo, LogoMark, CYAN_BOTTOM, CYAN_TOP, EST_COLOR_OPTIONS, type LogoVariant
+} from "../_shared/Logo";
 
 export const metadata = { title: "Logo lab", robots: { index: false } };
 
@@ -44,7 +46,8 @@ const VARIANTS: Array<{ key: LogoVariant; note: string }> = [
   { key: "a", note: "Slip of 8.5 left and 1.5 down. Measured against the original." },
   { key: "b", note: "Same slip, cuts thinned to 2.5 units." },
   { key: "c", note: "A harder slip, 12 left. Reads as a heavier cut." },
-  { key: "d", note: "Heavier strokes, cuts sitting closer to the crossbar." }
+  { key: "d", note: "Heavier strokes, cuts sitting closer to the crossbar." },
+  { key: "e", note: "C and D together: heavier strokes, cuts near the crossbar, harder slip. Now the default." }
 ];
 
 export default function LogoLab() {
@@ -98,7 +101,7 @@ export default function LogoLab() {
               <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-400">Original</p>
             </div>
             <div>
-              <LogoMark size={120} variant="a" />
+              <LogoMark size={120} variant="e" />
               <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-400">Rebuild, variant A</p>
             </div>
           </div>
@@ -112,7 +115,7 @@ export default function LogoLab() {
             cut reads.
           </p>
 
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
             {VARIANTS.map((variant) => (
               <div key={variant.key} className="rounded-lg border border-neutral-200 p-6">
                 <div className="flex h-36 items-center justify-center">
@@ -158,8 +161,8 @@ export default function LogoLab() {
                   <p className="w-32 shrink-0 font-mono text-[11px] uppercase tracking-[0.15em] text-neutral-900">
                     {typeface.name}
                   </p>
-                  <Logo size={52} variant="a" wordClass={typeface.cls} lines={["Henry Hai's", "Barbershop"]} />
-                  <Logo size={52} variant="a" wordClass={typeface.cls} />
+                  <Logo size={52} variant="e" wordClass={typeface.cls} lines={["Henry Hai's", "Barbershop"]} estScale={1.4} />
+                  <Logo size={52} variant="e" wordClass={typeface.cls} estScale={1.4} />
                 </div>
                 <p className="mt-3 text-[12px] text-neutral-500">{typeface.note}</p>
               </div>
@@ -167,17 +170,50 @@ export default function LogoLab() {
           </div>
         </section>
 
+        <section className="mt-16">
+          <h2 className="text-xl font-semibold">3. Est. 2013</h2>
+          <p className="mt-2 max-w-3xl text-[14px] leading-relaxed text-neutral-500">
+            Cyan on bone is a low-contrast pair, and this is the smallest thing in
+            the lockup, so it is the first line to stop reading. Each colour is
+            shown at the faithful size and enlarged, on bone and on dark. All of
+            them are switchable live from the site preview bar.
+          </p>
+
+          <div className="mt-8 space-y-3">
+            {EST_COLOR_OPTIONS.map((option) => (
+              <div key={option.id} className="rounded-lg border border-neutral-200 p-6">
+                <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-neutral-900">
+                  {option.label}
+                </p>
+                <div className="mt-5 flex flex-wrap items-center gap-x-12 gap-y-6">
+                  <div>
+                    <Logo size={54} variant="e" wordClass={michroma.className} estColor={option.id} />
+                    <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.2em] text-neutral-400">Faithful size</p>
+                  </div>
+                  <div>
+                    <Logo size={54} variant="e" wordClass={michroma.className} estColor={option.id} estScale={1.6} />
+                    <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.2em] text-neutral-400">Enlarged</p>
+                  </div>
+                  <div className="rounded bg-neutral-900 px-6 py-4">
+                    <Logo size={54} variant="e" wordClass={michroma.className} estColor={option.id} estScale={1.6} ink="#ffffff" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section className="mt-16 rounded-lg border border-neutral-200 p-10">
-          <h2 className="text-xl font-semibold">3. In place</h2>
+          <h2 className="text-xl font-semibold">4. In place</h2>
           <p className="mt-2 text-[14px] text-neutral-500">
             Michroma at navbar size and large, which is what the site preview now
             uses. Est. 2013 is enlarged in the small lockup; see the note below.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-16">
-            <Logo size={84} variant="a" wordClass={michroma.className} />
-            <Logo size={46} variant="a" wordClass={michroma.className} />
+            <Logo size={84} variant="e" wordClass={michroma.className} />
+            <Logo size={46} variant="e" wordClass={michroma.className} estScale={1.6} estColor="darkcyan" />
             <div className="rounded bg-neutral-900 px-7 py-5">
-              <Logo size={46} variant="a" wordClass={michroma.className} ink="#ffffff" />
+              <Logo size={46} variant="e" wordClass={michroma.className} estScale={1.6} ink="#ffffff" />
             </div>
           </div>
         </section>

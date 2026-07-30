@@ -23,7 +23,7 @@
  * mask and the fill together, which slides one fragment cleanly.
  */
 
-export type LogoVariant = "a" | "b" | "c" | "d";
+export type LogoVariant = "a" | "b" | "c" | "d" | "e";
 
 interface IGeometry {
   slant: number;
@@ -53,12 +53,33 @@ const GEOMETRY: Record<LogoVariant, IGeometry> = {
   /* A harder slip again, if the slice should read more violent. */
   c: { ...BASE, slip: [-12, 2.5] },
   /* Heavier strokes, cuts closer to the crossbar. */
-  d: { ...BASE, stroke: 32, leftCut: [29, 53], rightCut: [111, 33] }
+  d: { ...BASE, stroke: 32, leftCut: [29, 53], rightCut: [111, 33] },
+  /* C and D together: heavier strokes, cuts near the crossbar, harder slip. */
+  e: { ...BASE, stroke: 32, leftCut: [29, 53], rightCut: [111, 33], slip: [-12, 2.5] }
 };
 
 export const CYAN_TOP = "#4aaeea";
 export const CYAN_BOTTOM = "#0be6f9";
 export const WORDMARK_INK = "#262f4c";
+
+/*
+ * How Est. 2013 is coloured.
+ *
+ * The cyan gradient matches the mark, but cyan on bone is a low-contrast pair
+ * and the line is the smallest thing in the lockup, so it is the first thing to
+ * become unreadable. Darker treatments trade brand match for legibility.
+ */
+export type EstColor = "gradient" | "darkcyan" | "ink" | "black";
+
+export const EST_COLORS: Record<EstColor, { from: string, to: string, label: string }> = {
+  gradient: { from: CYAN_TOP, to: CYAN_BOTTOM, label: "Cyan gradient" },
+  darkcyan: { from: "#0b6f85", to: "#0aa3bd", label: "Dark cyan" },
+  ink: { from: WORDMARK_INK, to: WORDMARK_INK, label: "Navy ink" },
+  black: { from: "#141414", to: "#141414", label: "Near black" }
+};
+
+export const EST_COLOR_OPTIONS = (Object.keys(EST_COLORS) as EstColor[])
+  .map((key) => ({ id: key, label: EST_COLORS[key].label }));
 
 /* Splits the two strokes. The left never passes 48, the right never falls
    below 81, so anything between separates them safely. */
@@ -208,7 +229,8 @@ export function Logo({
   wordClass = "",
   lines = ["Henry Hai", "Studio"],
   showEst = true,
-  estScale = 1
+  estScale = 1,
+  estColor = "gradient"
 }: {
   size?: number;
   variant?: LogoVariant;
@@ -228,9 +250,11 @@ export function Logo({
    * 1; small ones need roughly 1.5.
    */
   estScale?: number;
+  estColor?: EstColor;
 }) {
-  const estBottom = accent ?? CYAN_BOTTOM;
-  const estTop = accentEnd ?? CYAN_TOP;
+  const scheme = EST_COLORS[estColor];
+  const estTop = accentEnd ?? scheme.from;
+  const estBottom = accent ?? scheme.to;
 
   /* Solve the name line size so the whole block lands at TEXT_BLOCK of the
      mark's height: the name lines, the gap, and Est. itself. */
