@@ -22,9 +22,9 @@ describe("Gallery", () => {
     const panel = screen.getByRole("tabpanel");
 
     expect(haircuts.rows).toHaveLength(2);
-    /* Row one is 224x70, row two is 224x224. The two rows differing is the
-       existing design, so a change here is a regression, not a restyle. */
-    expect(haircuts.rows[0].sizeClasses).toBe("w-56 h-[70px]");
+    /* Row one is 4:5 and row two is 1:1, matching the live site. The two rows
+       differing is the design, so a change here is a regression, not a restyle. */
+    expect(haircuts.rows[0].sizeClasses).toBe("w-56 h-[280px]");
     expect(haircuts.rows[1].sizeClasses).toBe("w-56 h-56");
 
     const images = within(panel).getAllByRole("img");

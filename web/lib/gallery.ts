@@ -1,10 +1,13 @@
 /*
  * Gallery contents, split by tab.
  *
- * The Haircuts tab carries over the exact two-row layout the old static site
- * had: row one renders each photo at 224x70 and row two at 224x224. The two
- * rows deliberately differ in aspect ratio -- that is the existing look, not a
- * bug -- so the dimensions live on the row, not on the individual photo.
+ * The Haircuts tab carries over the two-row layout: row one renders each photo
+ * at 4:5 and row two at 1:1. The two rows deliberately differ in aspect ratio,
+ * so the dimensions live on the row rather than on the individual photo.
+ *
+ * Row one is 4:5 because that is what the live site renders, per the gallery
+ * screenshot in screenshots/. The index.html in this repo said 224x70, which is
+ * a letterbox strip that crops every photo to a sliver; that copy was stale.
  *
  * Adding a tab means adding an entry to `galleryTabs`; the tab strip and the
  * panels are both driven off this array, so nothing else needs to change.
@@ -115,8 +118,8 @@ export const galleryTabs: IGalleryTab[] = [
       {
         id: "photo-container",
         width: 224,
-        height: 70,
-        sizeClasses: "w-56 h-[70px]",
+        height: 280,
+        sizeClasses: "w-56 h-[280px]",
         photos: haircutRowOne
       },
       {
