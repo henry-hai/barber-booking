@@ -1,122 +1,229 @@
 /*
- * Design direction index -- NOT part of the site.
+ * Full site preview, v2 -- NOT part of the site.
  *
- * Five full-page treatments at /preview/01 .. /preview/05, each rendered
- * against the real photography. Nothing links here from the site and every
- * page is noindex. Delete web/app/preview/ once a direction is chosen.
+ * One page rather than five directions, built from what survived review:
+ * editorial type (01), the bone and ink palette keeping the cyan (03 panel A),
+ * restrained motion (04), and the numbered index and locations treatment (05).
+ * Direction 02 is gone entirely.
+ *
+ * Every field the server validates is present, the gallery is the live site's
+ * two rows in the live site's order, and the policies are listed and gated.
+ *
+ * Delete web/app/preview/ once this is signed off and folded into the real site.
  */
 
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import { LogoMark } from "./_shared/Logo";
+import { Saira } from "next/font/google";
+import { Logo } from "./_shared/Logo";
+import { Gallery } from "./_shared/Gallery";
+import { BookingForm, Locations, Reveal, SectionIndex, ServicesMenu } from "./_shared/Parts";
+import { hero, nav, servicesPhoto, shop } from "./_shared/data";
+
+const saira = Saira({ subsets: ["latin"], weight: ["600", "700"] });
 
 export const metadata: Metadata = {
-  title: "Design directions",
+  title: "Henry Hai Studio",
   robots: { index: false, follow: false }
 };
 
-const DIRECTIONS = [
-  {
-    id: "01",
-    name: "Editorial Type",
-    lead: "The cheapest route to looking expensive.",
-    body: "Nothing moves, nothing changes colour. A high-contrast serif at display size, italic for emphasis, against monospaced micro-labels in wide caps. Quiet luxury is carried by typography before anything else, and this is the only direction that costs you nothing but a font stack.",
-    diff: "Type only",
-    effort: "Low",
-    risk: "Reverts in one file"
-  },
-  {
-    id: "02",
-    name: "Photography First",
-    lead: "You own the asset. Stop showing it at 224 pixels.",
-    body: "Dark ground, full-bleed hero, and an asymmetric editorial grid where photographs run edge to edge. Type recedes to captions. This is the biggest visual change on the list and the one that most directly monetises the DSLR work you already did.",
-    diff: "Layout",
-    effort: "High",
-    risk: "Gallery layout moves"
-  },
-  {
-    id: "03",
-    name: "Bone & Ink",
-    lead: "Your cyan survives this. It gets stronger.",
-    body: "Warm neutrals replace the cool blue-grey. Rendered twice so you can judge the real question -- whether the logo colour holds up. It does: on bone, the cyan becomes the only saturated thing on the page instead of one of three competing blues. Includes your logo rebuilt as vector.",
-    diff: "Palette",
-    effort: "Low",
-    risk: "Dashboard must follow"
-  },
-  {
-    id: "04",
-    name: "Motion & Material",
-    lead: "Has to be used, not looked at. Scroll it.",
-    body: "One easing curve, one duration, applied with discipline: content settles up as it enters view, photographs scale slowly under the cursor, price rows reveal on hover. No bounce, no parallax, no scroll-jacking. Falls back to static under prefers-reduced-motion.",
-    diff: "Interaction",
-    effort: "Medium",
-    risk: "Easy to overdo"
-  },
-  {
-    id: "05",
-    name: "Editorial Structure",
-    lead: "Reads like a monograph, not a template.",
-    body: "Numbered sections, a sticky index that tracks position, a fixed left label column, hairline rules instead of cards. Architectural rather than decorative. Costs nothing in colour or imagery, which is exactly why it layers on top of any of the other four.",
-    diff: "Structure",
-    effort: "Medium",
-    risk: "Purely additive"
-  }
+const SERIF = "ui-serif, 'Iowan Old Style', 'Palatino Linotype', Georgia, serif";
+
+const SECTIONS: Array<[string, string]> = [
+  ["about", "About"], ["services", "Services"],
+  ["gallery", "Gallery"], ["locations", "Locations"], ["book", "Book"]
 ];
 
-export default function PreviewIndex() {
+export default function SitePreview() {
   return (
-    <main className="min-h-screen bg-neutral-950 text-white">
-      <div className="mx-auto max-w-5xl px-6 py-20">
-        <div className="flex items-center gap-4">
-          <LogoMark size={44} tone="#00b9ff" toneEnd="#7de3ff" />
-          <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-neutral-500">
-            Internal &mdash; not linked from the site
+    <div className="bg-[#f7f5f2] text-neutral-900">
+
+      {/* preview chrome */}
+      <div className="sticky top-0 z-[100] flex flex-wrap items-center gap-x-5 gap-y-1 border-b border-white/10 bg-neutral-950 px-5 py-2">
+        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
+          Preview, not live
+        </span>
+        <Link href="/preview/logo" className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#7de3ff] hover:text-white">
+          Logo lab &rarr;
+        </Link>
+        <Link href="/" className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-400 hover:text-white">
+          Current site
+        </Link>
+      </div>
+
+      {/* nav */}
+      <header className="sticky top-[33px] z-50 border-b border-neutral-900/10 bg-[#f7f5f2]/90 backdrop-blur">
+        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4">
+          <Logo size={44} variant="a" wordClass={`${saira.className} font-bold`} name={shop.name} />
+          <nav className="hidden items-center gap-9 md:flex">
+            {nav.map((item) => (
+              <a
+                key={item}
+                href={`#s-${item.toLowerCase()}`}
+                className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500 transition-colors hover:text-neutral-900"
+              >
+                {item}
+              </a>
+            ))}
+            <a
+              href="#s-book"
+              className="group relative overflow-hidden bg-neutral-900 px-6 py-2.5 font-mono text-[10px] uppercase tracking-[0.2em] text-white"
+            >
+              <span className="relative z-10">Book</span>
+              <span className="absolute inset-0 -translate-x-full bg-[#0be6f9] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0" />
+            </a>
+          </nav>
+          <a href="#s-book" className="bg-neutral-900 px-5 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-white md:hidden">
+            Book
+          </a>
+        </div>
+      </header>
+
+      {/* hero */}
+      <section className="relative h-[76vh] min-h-[460px] overflow-hidden">
+        <Image src={hero} alt="" fill priority sizes="100vw" className="object-cover" />
+        <div className="absolute inset-0 bg-neutral-950/55" />
+        <div className="absolute inset-0 flex items-center">
+          <div className="mx-auto w-full max-w-[1400px] px-6">
+            <Reveal>
+              <p className="font-mono text-[11px] uppercase tracking-[0.32em] text-white/70">
+                Est. {shop.est} &middot; Milpitas &amp; Irvine
+              </p>
+            </Reveal>
+            <Reveal delay={130}>
+              <h1
+                className="mt-6 max-w-3xl text-[clamp(2.4rem,6vw,4.75rem)] leading-[1.02] tracking-[-0.025em] text-white"
+                style={{ fontFamily: SERIF }}
+              >
+                Personalized, luxury haircuts.
+              </h1>
+            </Reveal>
+            <Reveal delay={260}>
+              <a
+                href="#s-book"
+                className="mt-10 inline-block border-b border-white pb-1.5 font-mono text-[11px] uppercase tracking-[0.22em] text-white"
+              >
+                Book an appointment
+              </a>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* body */}
+      <div className="mx-auto max-w-[1400px] px-6">
+        <div className="flex gap-16">
+
+          <aside className="hidden w-40 shrink-0 lg:block">
+            <div className="sticky top-[140px] py-24">
+              <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-neutral-300">Index</p>
+              <div className="mt-5">
+                <SectionIndex sections={SECTIONS} />
+              </div>
+            </div>
+          </aside>
+
+          <main className="min-w-0 flex-1">
+
+            {/* about: no photograph, short */}
+            <Section id="about" number="01" title="About">
+              <Reveal>
+                <p className="max-w-2xl text-[19px] leading-[1.7] text-neutral-700" style={{ fontFamily: SERIF }}>
+                  I have been cutting hair since I was thirteen and running this
+                  studio since {shop.est}. Every cut is booked one at a time, and
+                  every photograph on this page is one I took myself.
+                </p>
+              </Reveal>
+              <Reveal delay={120}>
+                <dl className="mt-10 max-w-lg">
+                  {[["Cutting since", "2011"], ["Studio", String(shop.est)], ["Locations", "Milpitas, Irvine"], ["Photography", "In-house"]].map(([key, value]) => (
+                    <div key={key} className="flex gap-8 border-b border-neutral-200 py-2.5 first:border-t">
+                      <dt className="w-36 shrink-0 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-400">{key}</dt>
+                      <dd className="text-[14px] text-neutral-800">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </Reveal>
+            </Section>
+
+            {/* services */}
+            <Section id="services" number="02" title="Services">
+              <div className="grid gap-12 lg:grid-cols-12">
+                <div className="lg:col-span-4">
+                  <Reveal>
+                    <div className="relative aspect-[4/5] overflow-hidden rounded-sm">
+                      <Image
+                        src={servicesPhoto} alt="" fill sizes="(min-width:1024px) 30vw, 90vw"
+                        className="object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.04]"
+                      />
+                    </div>
+                  </Reveal>
+                  <p className="mt-4 text-[13px] leading-relaxed text-neutral-400">
+                    Hover any line for its terms.
+                  </p>
+                </div>
+                <div className="lg:col-span-8">
+                  <Reveal>
+                    <ServicesMenu />
+                  </Reveal>
+                </div>
+              </div>
+            </Section>
+
+            {/* gallery */}
+            <Section id="gallery" number="03" title="Gallery">
+              <Reveal>
+                <Gallery />
+              </Reveal>
+            </Section>
+
+            {/* locations */}
+            <Section id="locations" number="04" title="Locations">
+              <Locations />
+            </Section>
+
+            {/* book */}
+            <Section id="book" number="05" title="Book" last>
+              <Reveal>
+                <p className="mb-10 max-w-xl text-[17px] leading-relaxed text-neutral-600" style={{ fontFamily: SERIF }}>
+                  Offer up to three times that suit you. I confirm one by email.
+                </p>
+              </Reveal>
+              <Reveal delay={100}>
+                <BookingForm />
+              </Reveal>
+            </Section>
+
+          </main>
+        </div>
+      </div>
+
+      {/* footer */}
+      <footer className="border-t border-neutral-900/10">
+        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-6 px-6 py-12">
+          <Logo size={38} variant="a" wordClass={`${saira.className} font-bold`} name={shop.name} />
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-400">
+            &copy; {new Date().getFullYear()} {shop.name}
           </p>
         </div>
+      </footer>
+    </div>
+  );
+}
 
-        <h1 className="mt-10 text-5xl font-light tracking-[-0.03em]">Five directions</h1>
-        <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-neutral-400">
-          Each is a full page treatment rendered against your real photography,
-          not a mockup. They are not mutually exclusive: 01, 03 and 04 stack into
-          one coherent look, 05 layers on top of any of them, and 02 is the only
-          one that meaningfully conflicts with the others.
-        </p>
-
-        <div className="mt-16 space-y-4">
-          {DIRECTIONS.map((direction) => (
-            <Link
-              key={direction.id}
-              href={`/preview/${direction.id}`}
-              className="group block rounded-lg border border-white/10 p-7 transition-colors hover:border-white/30 hover:bg-white/[0.03]"
-            >
-              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
-                <span className="font-mono text-sm text-neutral-600">{direction.id}</span>
-                <h2 className="text-2xl font-medium tracking-tight">{direction.name}</h2>
-                <span className="flex-1" />
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500 opacity-0 transition-opacity group-hover:opacity-100">
-                  Open &rarr;
-                </span>
-              </div>
-
-              <p className="mt-3 text-[15px] text-[#7de3ff]">{direction.lead}</p>
-              <p className="mt-3 max-w-3xl text-[14px] leading-relaxed text-neutral-400">
-                {direction.body}
-              </p>
-
-              <div className="mt-5 flex flex-wrap gap-x-8 gap-y-2 font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-500">
-                <span>Changes: <span className="text-neutral-300">{direction.diff}</span></span>
-                <span>Effort: <span className="text-neutral-300">{direction.effort}</span></span>
-                <span>Risk: <span className="text-neutral-300">{direction.risk}</span></span>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        <p className="mt-16 text-[13px] text-neutral-600">
-          Delete <code className="font-mono text-neutral-500">web/app/preview/</code> once
-          a direction is chosen. Nothing in it is imported by the site.
-        </p>
+function Section({
+  id, number, title, children, last = false
+}: {
+  id: string; number: string; title: string; children: React.ReactNode; last?: boolean;
+}) {
+  return (
+    <section id={`s-${id}`} className={`scroll-mt-32 border-t border-neutral-900/15 py-20 first:border-t-0 ${last ? "pb-32" : ""}`}>
+      <div className="mb-10 flex items-baseline gap-5">
+        <span className="font-mono text-[11px] tracking-[0.15em] text-neutral-300">{number}</span>
+        <h2 className="text-[30px] tracking-tight" style={{ fontFamily: SERIF }}>{title}</h2>
       </div>
-    </main>
+      {children}
+    </section>
   );
 }

@@ -1,41 +1,84 @@
-/* Shared content for the design previews, so five pages show the same site. */
+/*
+ * Content for the site preview.
+ *
+ * The two haircut rows reproduce the live site exactly: same photographs, same
+ * order, row one at 4:5 and row two at 1:1. The order matters -- the first few
+ * in each row are chosen to open the gallery well.
+ *
+ * Note: index.html in this repo renders row one at 224x70, but the screenshot of
+ * the live site shows 4:5. The live site is the truth; this repo's copy is stale.
+ */
+
+export const shop = {
+  name: "Henry Hai Studio",
+  est: 2013,
+  phone: "408-858-707"
+};
 
 export const nav = ["About", "Services", "Gallery", "Locations"];
 
-export const priced = [
-  { name: "Clipper Cut", price: "$35" },
-  { name: "Clipper + Scissor Cut", price: "$40" },
-  { name: "Goatee & Mustache", price: "+$5" },
-  { name: "Eyebrows (Straight Razor)", price: "+$5" },
-  { name: "Design", price: "+$5-10" },
-  { name: "Lineup: Hairline + Nape", price: "$15" },
-  { name: "Braids", price: "$20" },
-  { name: "Housecall", price: "$100+" }
+/* Row one, 4:5. */
+export const rowOne = [
+  "/img/1_Murthi_1.JPG", "/img/2_Murthi_2.JPG", "/img/3_Jason_1.JPG",
+  "/img/4_KSG_1.JPG", "/img/6_Alex_1.JPG", "/img/5_KSG_2.JPG",
+  "/img/7_Alex_2.JPG", "/img/8_Adrian_1.JPG", "/img/9_Adrian_2.JPG",
+  "/img/10_Adrian_3.JPG", "/img/11_Elijah_2.JPG", "/img/12_Elijah_2.JPG",
+  "/img/13_Jason_2.JPG", "/img/14_Chester_1.JPG", "/img/15_Chester_2.JPG"
 ];
 
-export const hero = "/img/BW_BARBERSHOP_4.jpg";
-export const portrait = "/img/intro_portrait.jpg";
-
-/* A representative spread rather than the full archive. */
-export const cuts = [
-  "/img/26_Hoang_1.jpg",
-  "/img/21_RR_1.JPG",
-  "/img/27_JD_1.jpg",
-  "/img/19_Cam_1.jpg",
-  "/img/31_Hoang_2.jpg",
-  "/img/4_KSG_1.JPG",
-  "/img/29_Dev_1.JPG",
-  "/img/16_Ben_1.JPG"
+/* Row two, 1:1. */
+export const rowTwo = [
+  "/img/19_Cam_1.jpg", "/img/20_Cam_2.jpg", "/img/25_Andrew_1.JPG",
+  "/img/26_Hoang_1.jpg", "/img/27_JD_1.jpg", "/img/28_JD_2.jpg",
+  "/img/29_Dev_1.JPG", "/img/30_Dev_2.JPG", "/img/21_RR_1.JPG",
+  "/img/22_RR_2.JPG", "/img/23_RR_3.JPG", "/img/24_RR_4.JPG",
+  "/img/16_Ben_1.JPG", "/img/17_Ben_2.JPG", "/img/18_Ben_3.JPG",
+  "/img/31_Hoang_2.jpg", "/img/32_Hoang_3.jpg", "/img/33_Hoang_4.jpg",
+  "/img/34_Hoang_5.jpg"
 ];
 
-export const art = [
+/* Artwork, 4:5, its own tab. */
+export const artwork = [
   "/img/artwork/godfather-1.jpg",
   "/img/artwork/godfather-2.jpg",
   "/img/artwork/godfather-3.jpg",
   "/img/artwork/godfather-4.jpg"
 ];
 
+export const hero = "/img/BW_BARBERSHOP_4.jpg";
+/* The services photograph the original site used. */
+export const servicesPhoto = "/img/4_KSG_1.JPG";
+
+/*
+ * Services. `detail` is the per-item rule, surfaced on hover rather than as a
+ * footnote, which is what folds the old asterisk paragraph into the menu.
+ */
+export const services = [
+  { name: "Haircut: Clipper Cut", price: "$35", detail: "Includes a line-up." },
+  { name: "Haircut: Clipper + Scissor Cut", price: "$40", detail: "Includes a line-up." },
+  { name: "Goatee & Mustache", price: "+$5", detail: "Add-on. Attaches to a haircut." },
+  { name: "Goatee, Mustache, & Beard", price: "+$10", detail: "Add-on. Attaches to a haircut." },
+  { name: "Eyebrows (Straight Razor)", price: "+$5", detail: "Add-on. Attaches to a haircut." },
+  { name: "Design", price: "+$5-10", detail: "Add-on. Priced by complexity." },
+  { name: "Lineup: Hairline + Nape", price: "$15", detail: "A la carte only." },
+  { name: "Lineup: Full Service + Beard", price: "$20", detail: "A la carte only." },
+  { name: "Braids", price: "$20", detail: "A la carte." },
+  { name: "Threaded Eyebrows", price: "$15", detail: "A la carte." },
+  { name: "Housecall", price: "$100", detail: "Plus add-on prices." }
+];
+
+/* Milpitas first: that is where the practice started. */
 export const locations = [
-  { name: "Irvine", address: "71000 Verano Rd, Irvine, CA 92617" },
-  { name: "Milpitas", address: "Kennedy Dr, Milpitas, CA 95035" }
+  { name: "Milpitas", address: "Kennedy Dr, Milpitas, CA 95035", note: "Where it started." },
+  { name: "Irvine", address: "71000 Verano Rd, Irvine, CA 92617", note: "" }
+];
+
+/* Unchanged from the live site. These must be read and accepted before booking. */
+export const policies = [
+  "24-hour cancellation notice required.",
+  "Late arrivals may need to reschedule.",
+  "Being more than 15 minutes late will result in a $15 fee and the appointment may be cancelled.",
+  "Being late by 15 minutes or more, 3 times, will result in a temporary 100-day suspension.",
+  "Please wash hair thoroughly before for best results.",
+  "Remove all upper cartilage earrings if applicable."
 ];
