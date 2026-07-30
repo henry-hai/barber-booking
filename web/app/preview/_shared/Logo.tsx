@@ -69,10 +69,21 @@ export const WORDMARK_INK = "#262f4c";
  * and the line is the smallest thing in the lockup, so it is the first thing to
  * become unreadable. Darker treatments trade brand match for legibility.
  */
-export type EstColor = "gradient" | "darkcyan" | "ink" | "black";
+export type EstColor = "gradient" | "deep" | "darkcyan" | "ink" | "black";
 
 export const EST_COLORS: Record<EstColor, { from: string, to: string, label: string }> = {
   gradient: { from: CYAN_TOP, to: CYAN_BOTTOM, label: "Cyan gradient" },
+  /*
+   * The same direction as the mark, pushed darker so it holds on bone.
+   *
+   * Direction is worth stating because it is easy to get backwards. The mark
+   * runs deep blue at the top to vivid cyan at the base. In HSL the top is
+   * actually the lighter value, but perceived brightness runs the other way
+   * (luma 152 at the top against 167 at the base), which is why it reads as
+   * getting lighter downward. These stops keep that: luma 71 to 128, so the
+   * base is unmistakably the brighter end.
+   */
+  deep: { from: "#12546e", to: "#0aa8c6", label: "Deep gradient" },
   darkcyan: { from: "#0b6f85", to: "#0aa3bd", label: "Dark cyan" },
   ink: { from: WORDMARK_INK, to: WORDMARK_INK, label: "Navy ink" },
   black: { from: "#141414", to: "#141414", label: "Near black" }

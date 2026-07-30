@@ -61,6 +61,9 @@ export interface IHeroOption {
   focusLow: string;
   scrim: number;
   blur: boolean;
+  /* Three frames of the same sitting, for the triptych fit. Centre frame is
+     this option's own photograph, so the panel stays symmetrical. */
+  triptych?: string[];
 }
 
 /*
@@ -75,9 +78,10 @@ export interface IHeroOption {
  * part of the composition is lost.
  */
 export const heroFits = [
-  { id: "high", label: "High", note: "Pulled as high as the frame allows and shifted right, so the whole top of the head sits in view and the signature stays off the edge." },
+  { id: "high", label: "High", note: "Shifted right so the signature clears the edge, and raised, though not to the very top of the frame." },
   { id: "low", label: "Low", note: "Shifted right and dropped, leaving space above the head. Closest to how the phone reads." },
-  { id: "full", label: "Full frame", note: "The whole 4:5 photograph, uncropped, with the sides filled by a blurred copy of itself. No pixels invented." }
+  { id: "full", label: "Full frame", note: "The whole 4:5 photograph, uncropped, with the sides filled by a blurred copy of itself. No pixels invented." },
+  { id: "triptych", label: "Triptych", note: "Three frames of the same sitting, Adrian 1, 3 and 2, with 3 in the centre so the panel reads symmetrically. Falls back to full frame where a set of three does not exist." }
 ] as const;
 
 export type HeroFit = typeof heroFits[number]["id"];
@@ -100,10 +104,11 @@ export const heroOptions: IHeroOption[] = [
     label: "Adrian 3",
     note: "Back of the head, blue braids. The blue already agrees with the cyan. The phone crop is untouched.",
     focusMobile: "50% 34%",
-    focusHigh: "62% 0%",
-    focusLow: "62% 30%",
+    focusHigh: "30% 10%",
+    focusLow: "30% 32%",
     scrim: 0.5,
-    blur: true
+    blur: true,
+    triptych: ["/img/8_Adrian_1.JPG", "/img/10_Adrian_3.JPG", "/img/9_Adrian_2.JPG"]
   },
   {
     id: "cam2",
@@ -111,8 +116,8 @@ export const heroOptions: IHeroOption[] = [
     label: "Cam 2",
     note: "The most composed of the set. Reads luxury rather than edge.",
     focusMobile: "50% 38%",
-    focusHigh: "58% 0%",
-    focusLow: "58% 28%",
+    focusHigh: "34% 10%",
+    focusLow: "34% 30%",
     scrim: 0.42,
     blur: false
   },
@@ -122,8 +127,8 @@ export const heroOptions: IHeroOption[] = [
     label: "Hoang 1",
     note: "Harder and more street. Furthest from quiet luxury.",
     focusMobile: "50% 40%",
-    focusHigh: "58% 0%",
-    focusLow: "58% 30%",
+    focusHigh: "34% 10%",
+    focusLow: "34% 32%",
     scrim: 0.42,
     blur: false
   },
@@ -133,8 +138,8 @@ export const heroOptions: IHeroOption[] = [
     label: "KSG 1",
     note: "Simple and clean. Promoting this to hero moves Murthi 1 into the services slot.",
     focusMobile: "50% 32%",
-    focusHigh: "58% 0%",
-    focusLow: "58% 26%",
+    focusHigh: "34% 10%",
+    focusLow: "34% 28%",
     scrim: 0.48,
     blur: false
   }
