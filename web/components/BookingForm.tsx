@@ -114,6 +114,21 @@ export default function BookingForm() {
         </div>
 
         <div className="mb-4">
+          <label htmlFor="email" className="block text-gray-600 mb-1">Email</label>
+          <input
+            type="email" id="email" name="email" className={inputClasses}
+            maxLength={limits.email}
+            autoComplete="email"
+            value={form.email}
+            onChange={(event) => update("email", event.target.value)}
+          />
+          <p className="mt-1 text-sm text-gray-500">
+            Your confirmation goes here.
+          </p>
+          <FieldError message={errors.email} />
+        </div>
+
+        <div className="mb-4">
           <label htmlFor="phone" className="block text-gray-600 mb-1">Phone Number</label>
           <input
             type="tel" id="phone" name="phone" className={inputClasses}
@@ -180,6 +195,20 @@ export default function BookingForm() {
             <span className="ml-2 text-gray-600">I accept the booking policies</span>
           </label>
           <FieldError message={errors.policiesAccepted} />
+        </div>
+
+        {/* Honeypot. Positioned off-screen rather than display:none, since some
+            bots skip hidden inputs but not ones they can still "see". Real
+            users never reach it: it is out of the tab order and unlabelled. */}
+        <div aria-hidden="true" className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden">
+          <label htmlFor="website">Website</label>
+          <input
+            type="text" id="website" name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            value={form.website}
+            onChange={(event) => update("website", event.target.value)}
+          />
         </div>
 
         {submitState.status === "error" && (
