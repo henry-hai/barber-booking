@@ -31,7 +31,7 @@ const SERIF = "ui-serif, 'Iowan Old Style', 'Palatino Linotype', Georgia, serif"
  * because a photograph behind text is never uniform, and the eye needs either
  * more weight, more separation, or more colour to hold the line.
  */
-type HeroType = "white" | "shadow" | "cyan" | "bone";
+type HeroType = "white" | "shadow" | "cyan" | "bone" | "ink";
 
 const HERO_TYPE: Record<HeroType, { label: string; note: string; title: string; sub: string; eyebrow: string }> = {
   white: {
@@ -39,21 +39,39 @@ const HERO_TYPE: Record<HeroType, { label: string; note: string; title: string; 
     title: "text-white", sub: "text-white/75", eyebrow: "text-white/80"
   },
   shadow: {
-    label: "White + shadow", note: "White with a soft drop shadow, so it holds over the light parts of the photograph without darkening the whole frame.",
-    title: "text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.55)]",
-    sub: "text-white/85 [text-shadow:0_1px_12px_rgba(0,0,0,0.5)]",
-    eyebrow: "text-white/90 [text-shadow:0_1px_10px_rgba(0,0,0,0.5)]"
+    label: "White + halo", note: "White with a very soft halo rather than a drop shadow, so it holds over bright patches without casting an edge across the photograph behind it.",
+    title: "text-white [text-shadow:0_1px_18px_rgba(0,0,0,0.35)]",
+    sub: "text-white/85", eyebrow: "text-white/90"
   },
   cyan: {
     label: "Cyan eyebrow", note: "White headline with the label in brand cyan. Adds colour without tinting the name itself.",
-    title: "text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.5)]",
-    sub: "text-white/80", eyebrow: "text-[#22c3dd] [text-shadow:0_1px_10px_rgba(0,0,0,0.6)]"
+    title: "text-white", sub: "text-white/80", eyebrow: "text-[#22c3dd]"
   },
   bone: {
     label: "Bone", note: "The site's own bone rather than pure white. Warmer, and ties the hero to the page below it.",
-    title: "text-[#f5f2ee] [text-shadow:0_2px_24px_rgba(0,0,0,0.5)]",
+    title: "text-[#f5f2ee]",
     sub: "text-[#f5f2ee]/75", eyebrow: "text-[#f5f2ee]/80"
+  },
+  ink: {
+    label: "Ink", note: "Dark navy type. This is the one that works on the light full frame ground, where white type disappears.",
+    title: "text-[#1b2436]", sub: "text-[#1b2436]/70", eyebrow: "text-[#0b6f85]"
   }
+};
+
+/*
+ * How adjacent triptych panels meet.
+ *
+ * A hard join reads as three photographs; too much feather turns them to mush
+ * and loses the edges of the haircuts. The middle settings keep each frame
+ * legible while removing the seam as a line.
+ */
+type Seam = "line" | "soft" | "blend" | "wide";
+
+const SEAMS: Record<Seam, { label: string; note: string; feather: number; rule: boolean }> = {
+  line: { label: "Hairline", note: "A clean 1px rule between panels. Reads as a deliberate grid.", feather: 0, rule: true },
+  soft: { label: "Soft", note: "A narrow 6 percent fade at each join. The seam stops being a line but each frame keeps its edge.", feather: 6, rule: false },
+  blend: { label: "Blended", note: "A 14 percent fade. The three read as one continuous band.", feather: 14, rule: false },
+  wide: { label: "Wide", note: "A 24 percent fade. Softest of the four, and the point where the outer haircuts start to lose definition.", feather: 24, rule: false }
 };
 
 const SECTIONS: Array<[string, string]> = [
@@ -63,10 +81,11 @@ const SECTIONS: Array<[string, string]> = [
 
 export default function SitePreview() {
   const [heroId, setHeroId] = useState(heroOptions[0].id);
-  const [fit, setFit] = useState<HeroFit>("high");
+  const [fit, setFit] = useState<HeroFit>("triptych");
   const [estColor, setEstColor] = useState<EstColor>("deep");
   const [estBig, setEstBig] = useState(true);
   const [heroType, setHeroType] = useState<HeroType>("white");
+  const [seam, setSeam] = useState<Seam>("soft");
   const heroOption = heroOptions.find((option) => option.id === heroId) ?? heroOptions[0];
   const fitOption = heroFits.find((option) => option.id === fit) ?? heroFits[0];
   /* KSG 1 cannot be both hero and services photo. */
@@ -150,6 +169,26 @@ export default function SitePreview() {
           </button>
         </div>
 
+        {fit === "triptych" && (
+          <div className="mx-auto mt-1.5 flex max-w-[1400px] flex-wrap items-center gap-1">
+            <span className="mr-2 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
+              Seam
+            </span>
+            {(Object.keys(SEAMS) as Seam[]).map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setSeam(key)}
+                className={`rounded px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors ${
+                  key === seam ? "bg-[#22c3dd] text-neutral-900" : "text-neutral-400 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                {SEAMS[key].label}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="mx-auto mt-1.5 flex max-w-[1400px] flex-wrap items-center gap-1">
           <span className="mr-2 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
             Hero type
@@ -169,14 +208,14 @@ export default function SitePreview() {
         </div>
 
         <p className="mx-auto mt-1.5 max-w-[1400px] text-[11px] leading-relaxed text-neutral-500">
-          {heroOption.note} <span className="text-neutral-400">{fitOption.note}</span> <span className="text-neutral-400">{HERO_TYPE[heroType].note}</span>
+          {heroOption.note} <span className="text-neutral-400">{fitOption.note}</span> <span className="text-neutral-400">{HERO_TYPE[heroType].note}</span>{fit === "triptych" && <span className="text-neutral-400"> {SEAMS[seam].note}</span>}
         </p>
       </div>
 
       {/* nav */}
       <header className="sticky top-[92px] z-50 border-b border-neutral-900/10 bg-[#f5f2ee]/92 backdrop-blur">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4">
-          <Logo size={54} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estMin={estBig ? 12 : 0} />
+          <Logo size={54} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estMin={estBig ? 9 : 0} />
           <nav className="hidden items-center gap-9 md:flex">
             {nav.map((item) => (
               <a
@@ -215,19 +254,33 @@ export default function SitePreview() {
               className={`object-cover md:hidden ${heroOption.blur ? "scale-105 blur-[2px]" : ""}`}
             />
             <div className="hidden h-full md:flex">
-              {panels.map((src, index) => (
-                <div key={`${src}-${index}`} className="relative h-full flex-1">
-                  <Image
-                    src={src} alt="" fill priority
-                    sizes={`${Math.round(100 / panels.length)}vw`}
-                    style={{ objectPosition: "50% 26%" }}
-                    className={`object-cover ${heroOption.blur ? "blur-[4px]" : ""}`}
-                  />
-                  {index < panels.length - 1 && (
-                    <span className="absolute inset-y-0 right-0 w-px bg-white/15" />
-                  )}
-                </div>
-              ))}
+              {panels.map((src, index) => {
+                const { feather, rule } = SEAMS[seam];
+                /* Only the edges that touch another panel are faded, so the
+                   outer edges of the banner stay full bleed. */
+                const left = index > 0 ? feather : 0;
+                const right = index < panels.length - 1 ? feather : 0;
+                const mask = feather === 0 ? undefined
+                  : `linear-gradient(to right, transparent 0%, black ${left}%, black ${100 - right}%, transparent 100%)`;
+
+                return (
+                  <div
+                    key={`${src}-${index}`}
+                    className="relative h-full flex-1"
+                    style={mask ? { maskImage: mask, WebkitMaskImage: mask, marginLeft: index > 0 ? `-${feather / 2}%` : 0 } : undefined}
+                  >
+                    <Image
+                      src={src} alt="" fill priority
+                      sizes={`${Math.round(100 / panels.length)}vw`}
+                      style={{ objectPosition: "50% 26%" }}
+                      className={`object-cover ${heroOption.blur ? "blur-[4px]" : ""}`}
+                    />
+                    {rule && index < panels.length - 1 && (
+                      <span className="absolute inset-y-0 right-0 w-px bg-white/15" />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </>
         ) : fit === "full" || fit === "triptych" ? (
@@ -236,13 +289,19 @@ export default function SitePreview() {
             <Image
               key={`${heroOption.src}-bg`}
               src={heroOption.src} alt="" fill priority sizes="100vw"
-              /* Scaled well past the frame and blurred hard, so the fill is a
-                 wash of the photograph's own colour. Scaling past the frame
-                 also pushes the blur's own edges out of view, which is where
-                 the hard bands were coming from. */
+              /*
+                The wash is sampled from the left of the frame, well away from
+                the signature on the right edge, then blurred hard and lifted
+                so it lands as light grey rather than as a dark field. Scaling
+                past the frame keeps the blur's own edges out of view, which is
+                where the hard bands were coming from.
+              */
               style={{ objectPosition: heroOption.backdropFocus }}
-              className="scale-[1.8] object-cover blur-[80px] saturate-[1.05] brightness-[0.85]"
+              className="scale-[1.9] object-cover blur-[90px] brightness-[1.55] saturate-[0.35]"
             />
+            {/* Bone laid over the wash, so the ground is unmistakably light and
+                any residual detail from the photograph cannot read through. */}
+            <div className="absolute inset-0 bg-[#f0ece6]/72" />
             <div className="absolute inset-0 flex justify-center">
               {/* Feathered left and right so the centre frame dissolves into
                   the wash instead of meeting it at a hard vertical cut. */}
@@ -289,7 +348,14 @@ export default function SitePreview() {
             />
           </>
         )}
-        <div className="absolute inset-0" style={{ backgroundColor: `rgba(15,15,17,${heroOption.scrim})` }} />
+        {/* Full frame sits on a light ground, so it takes a bone veil rather
+            than the dark scrim the cropped fits need. Pair it with Ink type. */}
+        <div
+          className="absolute inset-0"
+          style={fit === "full"
+            ? { backgroundColor: "rgba(245,242,238,0.28)" }
+            : { backgroundColor: `rgba(15,15,17,${heroOption.scrim})` }}
+        />
         <div className="absolute inset-0 flex items-center">
           <div className="mx-auto w-full max-w-[1400px] px-6">
             <Reveal>
@@ -409,7 +475,7 @@ export default function SitePreview() {
 
       <footer className="border-t border-neutral-900/10">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-6 px-6 py-12">
-          <Logo size={46} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estMin={estBig ? 12 : 0} />
+          <Logo size={46} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estMin={estBig ? 9 : 0} />
           {/* Always the current year, not the founding year. */}
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
             &copy; {new Date().getFullYear()} {shop.name}
