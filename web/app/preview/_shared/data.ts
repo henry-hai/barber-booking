@@ -2,11 +2,7 @@
  * Content for the site preview.
  *
  * The two haircut rows reproduce the live site exactly: same photographs, same
- * order, row one at 4:5 and row two at 1:1. The order matters -- the first few
- * in each row are chosen to open the gallery well.
- *
- * Note: index.html in this repo renders row one at 224x70, but the screenshot of
- * the live site shows 4:5. The live site is the truth; this repo's copy is stale.
+ * order, row one at 4:5 and row two at 1:1.
  */
 
 export const shop = {
@@ -37,7 +33,6 @@ export const rowTwo = [
   "/img/34_Hoang_5.jpg"
 ];
 
-/* Artwork, 4:5, its own tab. */
 export const artwork = [
   "/img/artwork/godfather-1.jpg",
   "/img/artwork/godfather-2.jpg",
@@ -45,13 +40,74 @@ export const artwork = [
   "/img/artwork/godfather-4.jpg"
 ];
 
-export const hero = "/img/BW_BARBERSHOP_4.jpg";
+export interface IHeroOption {
+  id: string;
+  src: string;
+  label: string;
+  note: string;
+  focus: string;
+  scrim: number;
+  blur: boolean;
+}
+
+/*
+ * Hero candidates, all your own photographs.
+ *
+ * The old hero was a watermarked Stocksy stock image, so it had to go. The
+ * watermark is a licensing mark on someone else's work and removing it would
+ * not make the photo licensed.
+ *
+ * `focus` sets object-position, since these are 4:5 portraits cropped into a
+ * wide banner. `scrim` is how dark the overlay has to be for white type to
+ * hold, which depends on how bright the photograph is.
+ */
+export const heroOptions: IHeroOption[] = [
+  {
+    id: "adrian3",
+    src: "/img/10_Adrian_3.JPG",
+    label: "Adrian 3",
+    note: "Back of the head, blue braids. Mysterious, and the blue already agrees with the cyan. High key, so it carries a heavier scrim and a light blur.",
+    focus: "50% 34%",
+    scrim: 0.5,
+    blur: true
+  },
+  {
+    id: "cam2",
+    src: "/img/20_Cam_2.jpg",
+    label: "Cam 2",
+    note: "The most composed of the set. Reads luxury rather than edge.",
+    focus: "50% 38%",
+    scrim: 0.42,
+    blur: false
+  },
+  {
+    id: "hoang1",
+    src: "/img/26_Hoang_1.jpg",
+    label: "Hoang 1",
+    note: "Harder and more street. Furthest from quiet luxury.",
+    focus: "50% 40%",
+    scrim: 0.42,
+    blur: false
+  },
+  {
+    id: "ksg1",
+    src: "/img/4_KSG_1.JPG",
+    label: "KSG 1",
+    note: "Simple and clean. Promoting this to hero moves Murthi 1 into the services slot.",
+    focus: "50% 32%",
+    scrim: 0.48,
+    blur: false
+  }
+];
+
 /* The services photograph the original site used. */
 export const servicesPhoto = "/img/4_KSG_1.JPG";
+/* Used instead when KSG 1 is promoted to the hero. */
+export const servicesPhotoAlt = "/img/1_Murthi_1.JPG";
 
 /*
  * Services. `detail` is the per-item rule, surfaced on hover rather than as a
- * footnote, which is what folds the old asterisk paragraph into the menu.
+ * footnote, which folds the old asterisk paragraph into the menu itself.
  */
 export const services = [
   { name: "Haircut: Clipper Cut", price: "$35", detail: "Includes a line-up." },
@@ -73,7 +129,7 @@ export const locations = [
   { name: "Irvine", address: "71000 Verano Rd, Irvine, CA 92617", note: "" }
 ];
 
-/* Unchanged from the live site. These must be read and accepted before booking. */
+/* Unchanged from the live site. Read and accepted before a booking is sent. */
 export const policies = [
   "24-hour cancellation notice required.",
   "Late arrivals may need to reschedule.",

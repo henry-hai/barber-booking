@@ -1,12 +1,16 @@
 "use client";
 
 /*
- * Interactive pieces of the preview: scroll reveals, the services menu with its
- * rules folded in on hover, the section index, and the full booking form.
+ * Interactive pieces of the preview: scroll reveals, the mobile menu, the
+ * services menu with its rules folded in, the section index, and the booking
+ * form.
+ *
+ * Contrast note: every muted tone here sits at neutral-500 or darker on the
+ * bone ground. neutral-300 and neutral-400 were failing to read.
  */
 
 import { useEffect, useRef, useState } from "react";
-import { locations, policies, services } from "./data";
+import { locations, nav, policies, services, shop } from "./data";
 
 /* ---------------------------------------------------------------- reveal */
 
@@ -39,34 +43,118 @@ export function Reveal({ children, delay = 0 }: { children: React.ReactNode; del
   );
 }
 
-/* -------------------------------------------------------------- services */
+/* ----------------------------------------------------------- mobile menu */
 
 /*
- * The old site carried a footnote explaining that add-ons attach to haircuts
- * and line-ups are a la carte. That rule now lives on each row and surfaces on
- * hover, so the menu states its own terms instead of deferring to an asterisk.
+ * A hamburger that opens the whole screen rather than a dropdown list.
+ *
+ * The old site dropped a small stack of links under the bar. This takes the
+ * full viewport, sets the sections at display size with their index numbers,
+ * and staggers them in on the same easing the rest of the page uses. The icon
+ * morphs into a close mark rather than swapping glyphs.
  */
+export function MobileMenu() {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = open ? "hidden" : previous;
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") { setOpen(false); } };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const items = [...nav, "Book"];
+
+  return (
+    <div className="md:hidden">
+      <button
+        type="button"
+        aria-label={open ? "Close menu" : "Open menu"}
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        className="relative z-[210] flex h-10 w-10 flex-col items-center justify-center gap-[5px]"
+      >
+        {[0, 1, 2].map((line) => (
+          <span
+            key={line}
+            className={`block h-[1.5px] w-6 origin-center bg-current transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+              open ? "text-white" : "text-neutral-900"
+            } ${
+              open && line === 0 ? "translate-y-[6.5px] rotate-45" : ""
+            } ${
+              open && line === 1 ? "scale-x-0 opacity-0" : ""
+            } ${
+              open && line === 2 ? "-translate-y-[6.5px] -rotate-45" : ""
+            }`}
+          />
+        ))}
+      </button>
+
+      <div
+        className={`fixed inset-0 z-[205] bg-neutral-950 transition-opacity duration-500 ${
+          open ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      >
+        <nav className="flex h-full flex-col justify-center px-8">
+          {items.map((item, index) => (
+            <a
+              key={item}
+              href={`#s-${item.toLowerCase()}`}
+              onClick={() => setOpen(false)}
+              style={{ transitionDelay: open ? `${120 + index * 70}ms` : "0ms" }}
+              className={`group flex items-baseline gap-5 border-b border-white/10 py-5 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                open ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+              }`}
+            >
+              <span className="font-mono text-[11px] text-white/35">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span className="text-[2rem] font-light leading-none tracking-tight text-white">
+                {item}
+              </span>
+            </a>
+          ))}
+
+          <div
+            style={{ transitionDelay: open ? "500ms" : "0ms" }}
+            className={`mt-10 transition-all duration-700 ${open ? "opacity-100" : "opacity-0"}`}
+          >
+            <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-white/40">
+              Milpitas &amp; Irvine
+            </p>
+            <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.25em] text-[#0be6f9]">
+              Est. {shop.est}
+            </p>
+          </div>
+        </nav>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------- services */
+
 export function ServicesMenu() {
   return (
     <ul>
       {services.map((service, index) => (
-        <li
-          key={service.name}
-          className="group border-b border-neutral-200 py-4 first:border-t"
-        >
+        <li key={service.name} className="group border-b border-neutral-300 py-4 first:border-t">
           <div className="flex items-baseline gap-4">
-            <span className="w-6 shrink-0 font-mono text-[11px] text-neutral-300 transition-colors group-hover:text-neutral-900">
+            <span className="w-6 shrink-0 font-mono text-[11px] text-neutral-400 transition-colors group-hover:text-neutral-900">
               {String(index + 1).padStart(2, "0")}
             </span>
             <span className="text-[17px] font-medium text-neutral-900 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1">
               {service.name}
             </span>
-            <span className="flex-1 border-b border-dotted border-transparent transition-colors duration-500 group-hover:border-neutral-300" />
+            <span className="flex-1 border-b border-dotted border-transparent transition-colors duration-500 group-hover:border-neutral-400" />
             <span className="font-mono text-[14px] font-medium text-neutral-900">{service.price}</span>
           </div>
-          {/* Rule for this row. Collapsed until hover or keyboard focus. */}
           <div className="grid grid-rows-[0fr] pl-10 transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:grid-rows-[1fr] group-focus-within:grid-rows-[1fr]">
-            <p className="overflow-hidden text-[13px] leading-relaxed text-neutral-500">
+            <p className="overflow-hidden text-[13px] leading-relaxed text-neutral-600">
               <span className="block pt-2">{service.detail}</span>
             </p>
           </div>
@@ -78,10 +166,6 @@ export function ServicesMenu() {
 
 /* ----------------------------------------------------------------- index */
 
-/*
- * Sticky section index. Hidden below lg, where a normal bar takes over, because
- * a fixed left rail has nowhere to live on a phone.
- */
 export function SectionIndex({ sections }: { sections: Array<[string, string]> }) {
   const [active, setActive] = useState(sections[0][0]);
 
@@ -103,12 +187,14 @@ export function SectionIndex({ sections }: { sections: Array<[string, string]> }
 
   return (
     <ul className="space-y-3">
-      {sections.map(([id, label], index) => (
+      {sections.map(([id, text], index) => (
         <li key={id}>
           <a href={`#s-${id}`} className="flex gap-3 font-mono text-[11px] uppercase tracking-[0.15em]">
-            <span className="text-neutral-300">{String(index + 1).padStart(2, "0")}</span>
-            <span className={active === id ? "border-b border-neutral-900 pb-0.5 text-neutral-900" : "text-neutral-400 transition-colors hover:text-neutral-700"}>
-              {label}
+            <span className="text-neutral-400">{String(index + 1).padStart(2, "0")}</span>
+            <span className={active === id
+              ? "border-b border-neutral-900 pb-0.5 text-neutral-900"
+              : "text-neutral-500 transition-colors hover:text-neutral-900"}>
+              {text}
             </span>
           </a>
         </li>
@@ -119,14 +205,14 @@ export function SectionIndex({ sections }: { sections: Array<[string, string]> }
 
 /* --------------------------------------------------------------- booking */
 
-const field = "w-full border-b border-neutral-300 bg-transparent pb-2.5 pt-1 text-[15px] text-neutral-900 outline-none transition-colors focus:border-neutral-900";
-const label = "font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400";
+const field = "w-full border-b border-neutral-400 bg-transparent pb-2.5 pt-1 text-[15px] text-neutral-900 outline-none transition-colors focus:border-neutral-900";
+const labelClass = "font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-600";
 
 /*
- * The full form, matching the fields the server validates and the sheet stores:
- * name, email, phone, three date/availability pairs, description, and the
- * policies acceptance. Nothing here is decorative -- dropping a field would
- * break the A..K column contract downstream.
+ * Every field the server validates, with the same required/optional split:
+ * name, email, phone, date 1 and its availability, and the description are
+ * required; dates 2 and 3 are optional but must be complete pairs. Dropping or
+ * renaming any of these breaks the A..K sheet contract downstream.
  */
 export function BookingForm() {
   const [accepted, setAccepted] = useState(false);
@@ -140,28 +226,28 @@ export function BookingForm() {
           ["Phone number", "tel", "phone"]
         ].map(([text, type, id]) => (
           <div key={id}>
-            <label htmlFor={`p-${id}`} className={label}>{text}</label>
-            <input id={`p-${id}`} type={type} className={`${field} mt-2`} />
+            <label htmlFor={`p-${id}`} className={labelClass}>{text}</label>
+            <input id={`p-${id}`} type={type} required className={`${field} mt-2`} />
           </div>
         ))}
       </div>
 
-      {/* All three preferred slots. Two and three are optional but present. */}
       <div className="space-y-8">
         {[1, 2, 3].map((slot) => (
           <div key={slot} className="grid gap-8 sm:grid-cols-3">
             <div>
-              <label htmlFor={`p-date${slot}`} className={label}>
-                Preferred date {slot}{slot > 1 ? " (optional)" : ""}
+              <label htmlFor={`p-date${slot}`} className={labelClass}>
+                Preferred date {slot}
+                {slot > 1 && <span className="ml-2 normal-case tracking-normal text-neutral-500">optional</span>}
               </label>
               <input id={`p-date${slot}`} type="date" className={`${field} mt-2`} />
             </div>
             <div className="sm:col-span-2">
-              <label htmlFor={`p-avail${slot}`} className={label}>Availability</label>
+              <label htmlFor={`p-avail${slot}`} className={labelClass}>Availability</label>
               <input
                 id={`p-avail${slot}`} type="text"
                 placeholder="Describe your availability"
-                className={`${field} mt-2 placeholder:text-neutral-300`}
+                className={`${field} mt-2 placeholder:text-neutral-400`}
               />
             </div>
           </div>
@@ -169,17 +255,16 @@ export function BookingForm() {
       </div>
 
       <div>
-        <label htmlFor="p-desc" className={label}>Description of haircut / other comments</label>
+        <label htmlFor="p-desc" className={labelClass}>Description of haircut / other comments</label>
         <textarea id="p-desc" rows={3} className={`${field} mt-2 resize-none`} />
       </div>
 
-      {/* Policies. Listed in full, and the box gates submission. */}
-      <div className="border-t border-neutral-200 pt-8">
-        <p className={label}>Booking policies</p>
+      <div className="border-t border-neutral-300 pt-8">
+        <p className={labelClass}>Booking policies</p>
         <ul className="mt-4 space-y-2">
           {policies.map((policy) => (
-            <li key={policy} className="flex gap-3 text-[13px] leading-relaxed text-neutral-500">
-              <span className="mt-[7px] h-[3px] w-[3px] shrink-0 rounded-full bg-neutral-400" />
+            <li key={policy} className="flex gap-3 text-[13px] leading-relaxed text-neutral-600">
+              <span className="mt-[7px] h-[3px] w-[3px] shrink-0 rounded-full bg-neutral-500" />
               {policy}
             </li>
           ))}
@@ -192,7 +277,7 @@ export function BookingForm() {
             onChange={(event) => setAccepted(event.target.checked)}
             className="h-4 w-4 accent-neutral-900"
           />
-          <span className="text-[14px] text-neutral-700">
+          <span className="text-[14px] text-neutral-800">
             I have read and accept the booking policies
           </span>
         </label>
@@ -201,14 +286,14 @@ export function BookingForm() {
       <button
         type="submit"
         disabled={!accepted}
-        className="group relative overflow-hidden bg-neutral-900 px-10 py-4 font-mono text-[11px] uppercase tracking-[0.25em] text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
+        className="group relative overflow-hidden bg-neutral-900 px-10 py-4 font-mono text-[11px] uppercase tracking-[0.25em] text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
       >
         <span className="relative z-10">Send request</span>
         <span className="absolute inset-0 -translate-x-full bg-[#0be6f9] transition-transform duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-enabled:group-hover:translate-x-0" />
       </button>
 
-      <p className="text-[13px] text-neutral-400">
-        You will get a confirmation by email listing every time you offered.
+      <p className="text-[13px] text-neutral-600">
+        You will get a confirmation by email, and I will be in touch soon.
       </p>
     </form>
   );
@@ -221,18 +306,18 @@ export function Locations() {
     <div className="grid gap-10 sm:grid-cols-2">
       {locations.map((location, index) => (
         <Reveal key={location.name} delay={index * 120}>
-          <div className="border-t border-neutral-900/15 pt-5">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-300">
+          <div className="border-t border-neutral-900/20 pt-5">
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-400">
               0{index + 1}
             </p>
             <h3 className="mt-2 text-[22px] font-medium tracking-tight text-neutral-900">
               {location.name}
             </h3>
-            <p className="mt-2 text-[14px] text-neutral-500">{location.address}</p>
+            <p className="mt-2 text-[14px] text-neutral-600">{location.address}</p>
             {location.note && (
-              <p className="mt-1 text-[13px] italic text-neutral-400">{location.note}</p>
+              <p className="mt-1 text-[13px] italic text-neutral-500">{location.note}</p>
             )}
-            <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-400">
+            <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
               Seasonal hours, by appointment
             </p>
           </div>
