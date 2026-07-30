@@ -47,17 +47,30 @@ export default function GalleryRow({ row, label }: IGalleryRowProps) {
         id={row.id}
         className="flex overflow-x-auto space-x-4 px-12 scroll-smooth"
       >
-        {row.photos.map((photo) => (
-          <Image
-            key={photo.src}
-            src={photo.src}
-            alt={photo.alt}
-            width={row.width}
-            height={row.height}
-            sizes={`${row.width}px`}
-            className={`${row.sizeClasses} flex-none object-cover rounded-lg shadow-lg`}
-          />
-        ))}
+        {row.photos.map((photo) =>
+          row.pending ? (
+            /* The image file is not in the repo yet; name the file it wants so
+               the gap is obvious rather than a broken image icon. */
+            <div
+              key={photo.src}
+              className={`${row.sizeClasses} flex-none flex items-center justify-center rounded-lg shadow-lg border-2 border-dashed border-gray-300 bg-gray-50 p-3 text-center`}
+            >
+              <span className="text-xs text-gray-500 break-all">
+                Add <code>public{photo.src}</code>
+              </span>
+            </div>
+          ) : (
+            <Image
+              key={photo.src}
+              src={photo.src}
+              alt={photo.alt}
+              width={row.width}
+              height={row.height}
+              sizes={`${row.width}px`}
+              className={`${row.sizeClasses} flex-none object-cover rounded-lg shadow-lg`}
+            />
+          )
+        )}
       </div>
 
       <button
