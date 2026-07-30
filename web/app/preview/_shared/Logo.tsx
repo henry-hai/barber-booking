@@ -1,40 +1,58 @@
 /*
- * The mark, rebuilt as vector.
+ * The mark, rebuilt as vector from measurements taken off the original.
  *
- * Geometry and colour are measured off the original screenshot rather than
- * guessed: the mark's bounding box is 132x144, each stroke runs ~23% of the
- * width, the crossbar sits between 38% and 53% of the height, and the razor cut
- * crosses at ~40%. The gradient samples #4aaeea at the top and #0be6f9 at the
- * bottom, which is what makes it read as lighter at the base.
+ * Scanning the screenshot row by row gives the real construction, which is not
+ * one slash across the letter but TWO short cuts, each crossing a single stroke,
+ * both sitting above the crossbar with the right one higher than the left:
  *
- * `variant` exists so the slant and the cut can be compared side by side at
- * /preview/logo without editing this file. Once one is chosen the rest go.
+ *   bounding box   132 x 144
+ *   slant          7.4 degrees (left edge travels 18px over 138px of height)
+ *   stroke         30 units, 22.7% of the width
+ *   crossbar       42% to 58% of the height
+ *   left cut       centred at (29, 50), i.e. 22% across, 35% down
+ *   right cut      centred at (111, 30), i.e. 84% across, 21% down
+ *   cut angle      about 12 degrees, rising to the right
+ *   gradient       #4aaeea at the top to #0be6f9 at the base
+ *
+ * The viewBox spans the full slanted extent so the bottom-left of the left
+ * stroke is never clipped, which the previous build got wrong.
  */
 
 export type LogoVariant = "a" | "b" | "c" | "d";
 
 interface IGeometry {
-  slant: number;      // degrees of italic lean
-  cutAngle: number;   // degrees the razor line runs at
-  cutWidth: number;   // thickness of the cut, in viewBox units
-  cutY: number;       // height at which the cut crosses
-  stroke: number;     // stroke width, in viewBox units
+  slant: number;
+  stroke: number;
+  cutAngle: number;
+  cutWidth: number;
+  /* Centres of the two cuts, in the final slanted coordinate space. */
+  leftCut: [number, number];
+  rightCut: [number, number];
 }
 
+const BASE: IGeometry = {
+  slant: 7.4,
+  stroke: 30,
+  cutAngle: -12,
+  cutWidth: 4,
+  leftCut: [29, 50],
+  rightCut: [111, 30]
+};
+
 const GEOMETRY: Record<LogoVariant, IGeometry> = {
-  /* Measured mean: subtle lean, thin cut where the original has it. */
-  a: { slant: 10, cutAngle: -14, cutWidth: 4.5, cutY: 56, stroke: 30 },
-  /* Steeper lean, matching the right stroke's measured 12.4 degrees. */
-  b: { slant: 13, cutAngle: -16, cutWidth: 4, cutY: 54, stroke: 31 },
-  /* Thinnest cut, shallowest angle. The most restrained of the four. */
-  c: { slant: 10, cutAngle: -10, cutWidth: 3.25, cutY: 58, stroke: 31 },
-  /* Heaviest strokes, cut riding higher across the crossbar's top edge. */
-  d: { slant: 12, cutAngle: -18, cutWidth: 5, cutY: 50, stroke: 33 }
+  /* Straight off the measurements. */
+  a: BASE,
+  /* Thinner cuts. */
+  b: { ...BASE, cutWidth: 3 },
+  /* Steeper cuts, as the upscaled crop reads at the right stroke. */
+  c: { ...BASE, cutAngle: -14, cutWidth: 4.5 },
+  /* Heavier strokes, cuts sitting a touch closer to the crossbar. */
+  d: { ...BASE, stroke: 32, leftCut: [29, 53], rightCut: [111, 33] }
 };
 
 export const CYAN_TOP = "#4aaeea";
 export const CYAN_BOTTOM = "#0be6f9";
-export const WORDMARK_INK = "#14212a";
+export const WORDMARK_INK = "#22314a";
 
 export function LogoMark({
   size = 48,
@@ -46,55 +64,63 @@ export function LogoMark({
 }: {
   size?: number;
   variant?: LogoVariant;
-  /* Bottom of the gradient. Defaults to the measured cyan. */
   tone?: string;
-  /* Top of the gradient. */
   toneEnd?: string;
-  /* Single colour, no gradient. For monochrome placements. */
   flat?: string;
   className?: string;
 }) {
-  const geometry = GEOMETRY[variant];
+  const g = GEOMETRY[variant];
   const bottom = tone ?? CYAN_BOTTOM;
   const top = toneEnd ?? CYAN_TOP;
   const id = `lm-${variant}-${(flat ?? bottom).replace(/[^a-z0-9]/gi, "")}`;
 
-  /* 132x144 is the measured bounding box; the extra width absorbs the slant. */
+  /* Pre-skew stroke positions. skewX shifts x by -y*tan(slant), so a stroke
+     placed at 18 lands at 0 by the baseline, matching the measurement. */
+  const leftX = 18;
+  const rightX = 99;
+
   return (
     <svg
       width={size * 0.917}
       height={size}
-      viewBox="-14 0 160 144"
+      viewBox="0 0 132 144"
       fill="none"
       className={className}
       role="img"
       aria-label="Henry Hai Studio"
     >
       <defs>
-        <linearGradient id={`${id}-g`} x1="0" y1="0" x2="0.15" y2="1">
+        <linearGradient id={`${id}-g`} x1="0" y1="0" x2="0.12" y2="1">
           <stop offset="0%" stopColor={top} />
           <stop offset="100%" stopColor={bottom} />
         </linearGradient>
 
         <mask id={`${id}-m`}>
-          <rect x="-20" y="-10" width="200" height="170" fill="black" />
-          <g transform={`skewX(-${geometry.slant})`}>
-            {/* left stroke, right stroke, crossbar */}
-            <rect x="6" y="0" width={geometry.stroke} height="144" fill="white" />
-            <rect x={126 - geometry.stroke} y="0" width={geometry.stroke} height="144" fill="white" />
-            <rect x="6" y="55" width="120" height="21" fill="white" />
+          <rect x="-30" y="-20" width="220" height="200" fill="black" />
+          <g transform={`skewX(-${g.slant})`}>
+            <rect x={leftX} y="0" width={g.stroke} height="144" fill="white" />
+            <rect x={rightX} y="0" width={g.stroke} height="144" fill="white" />
+            {/* crossbar, 42% to 58% of the height */}
+            <rect x={leftX} y="60.5" width={rightX + g.stroke - leftX} height="23" fill="white" />
           </g>
-          {/* the razor line */}
+
+          {/* The two razor cuts, placed in final space so the measured centres
+              apply directly. Each is short enough to touch only its own stroke. */}
           <rect
-            x="-40" y={geometry.cutY} width="230" height={geometry.cutWidth}
-            fill="black"
-            transform={`rotate(${geometry.cutAngle} 66 ${geometry.cutY})`}
+            x={g.leftCut[0] - 36} y={g.leftCut[1] - g.cutWidth / 2}
+            width="72" height={g.cutWidth} fill="black"
+            transform={`rotate(${g.cutAngle} ${g.leftCut[0]} ${g.leftCut[1]})`}
+          />
+          <rect
+            x={g.rightCut[0] - 36} y={g.rightCut[1] - g.cutWidth / 2}
+            width="72" height={g.cutWidth} fill="black"
+            transform={`rotate(${g.cutAngle} ${g.rightCut[0]} ${g.rightCut[1]})`}
           />
         </mask>
       </defs>
 
       <rect
-        x="-20" y="-10" width="200" height="170"
+        x="-30" y="-20" width="220" height="200"
         fill={flat ?? `url(#${id}-g)`}
         mask={`url(#${id}-m)`}
       />
@@ -103,8 +129,8 @@ export function LogoMark({
 }
 
 /*
- * Mark plus wordmark. The wordmark class comes from the caller so the typeface
- * can be swapped at /preview/logo without touching this component.
+ * Full lockup. All three lines are centred as a block, and the gap to the mark
+ * is tightened to match the original, where the type sits close to the H.
  */
 export function Logo({
   size = 46,
@@ -115,7 +141,7 @@ export function Logo({
   ink = WORDMARK_INK,
   accent,
   wordClass = "",
-  name = "Henry Hai Studio",
+  lines = ["Henry Hai", "Studio"],
   showEst = true
 }: {
   size?: number;
@@ -126,30 +152,34 @@ export function Logo({
   ink?: string;
   accent?: string;
   wordClass?: string;
-  name?: string;
+  lines?: string[];
   showEst?: boolean;
 }) {
-  /* "Henry Hai Studio" sets on two lines the way the original did. */
-  const parts = name.split(" ");
-  const first = parts.slice(0, -1).join(" ");
-  const second = parts[parts.length - 1];
-
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center" style={{ gap: size * 0.15 }}>
       <LogoMark size={size} variant={variant} tone={tone} toneEnd={toneEnd} flat={flat} />
-      {/* Wordmark and Est. share a column so Est. centres under the type. */}
       <div className="flex flex-col items-center leading-none">
-        <div
-          className={`uppercase leading-[1.02] tracking-[0.01em] ${wordClass}`}
-          style={{ color: ink, fontSize: size * 0.335 }}
-        >
-          <div>{first}</div>
-          <div>{second}</div>
-        </div>
+        {lines.map((line) => (
+          <div
+            key={line}
+            className={`uppercase ${wordClass}`}
+            style={{ color: ink, fontSize: size * 0.315, lineHeight: 1.16, letterSpacing: "0.015em" }}
+          >
+            {line}
+          </div>
+        ))}
         {showEst && (
           <div
-            className={`mt-[0.35em] uppercase tracking-[0.3em] ${wordClass}`}
-            style={{ color: accent ?? CYAN_BOTTOM, fontSize: size * 0.155 }}
+            className={`uppercase ${wordClass}`}
+            style={{
+              color: accent ?? CYAN_BOTTOM,
+              fontSize: size * 0.175,
+              letterSpacing: "0.2em",
+              marginTop: size * 0.085,
+              /* letter-spacing adds a trailing gap on the last character, which
+                 pushes the line left of centre. This pulls it back. */
+              textIndent: "0.2em"
+            }}
           >
             Est. 2013
           </div>
