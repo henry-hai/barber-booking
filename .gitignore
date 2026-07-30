@@ -11,3 +11,6 @@ serviceAccount.json
 # OS files
 Thumbs.db
 .DS_Store
+
+# Local notes
+barber-booking_project_context.md
