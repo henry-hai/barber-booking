@@ -12,15 +12,17 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Aldrich } from "next/font/google";
+import { Michroma } from "next/font/google";
 import { Logo } from "./_shared/Logo";
 import { Gallery } from "./_shared/Gallery";
 import {
   BookingForm, Locations, MobileMenu, Reveal, SectionIndex, ServicesMenu
 } from "./_shared/Parts";
-import { heroOptions, nav, servicesPhoto, servicesPhotoAlt, shop } from "./_shared/data";
+import {
+  heroFits, heroOptions, nav, servicesPhoto, servicesPhotoAlt, shop, type HeroFit
+} from "./_shared/data";
 
-const aldrich = Aldrich({ subsets: ["latin"], weight: "400" });
+const michroma = Michroma({ subsets: ["latin"], weight: "400" });
 
 const SERIF = "ui-serif, 'Iowan Old Style', 'Palatino Linotype', Georgia, serif";
 
@@ -31,7 +33,9 @@ const SECTIONS: Array<[string, string]> = [
 
 export default function SitePreview() {
   const [heroId, setHeroId] = useState(heroOptions[0].id);
+  const [fit, setFit] = useState<HeroFit>("shift");
   const heroOption = heroOptions.find((option) => option.id === heroId) ?? heroOptions[0];
+  const fitOption = heroFits.find((option) => option.id === fit) ?? heroFits[0];
   /* KSG 1 cannot be both hero and services photo. */
   const menuPhoto = heroOption.id === "ksg1" ? servicesPhotoAlt : servicesPhoto;
 
@@ -65,13 +69,34 @@ export default function SitePreview() {
             ))}
           </span>
         </div>
-        <p className="mx-auto mt-1 max-w-[1400px] text-[11px] text-neutral-500">{heroOption.note}</p>
+
+        <div className="mx-auto mt-1.5 flex max-w-[1400px] flex-wrap items-center gap-1">
+          <span className="mr-2 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
+            Desktop fit
+          </span>
+          {heroFits.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => setFit(option.id)}
+              className={`rounded px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors ${
+                option.id === fit ? "bg-[#0be6f9] text-neutral-900" : "text-neutral-400 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+
+        <p className="mx-auto mt-1.5 max-w-[1400px] text-[11px] leading-relaxed text-neutral-500">
+          {heroOption.note} <span className="text-neutral-400">{fitOption.note}</span>
+        </p>
       </div>
 
       {/* nav */}
-      <header className="sticky top-[57px] z-50 border-b border-neutral-900/10 bg-[#f5f2ee]/92 backdrop-blur">
+      <header className="sticky top-[92px] z-50 border-b border-neutral-900/10 bg-[#f5f2ee]/92 backdrop-blur">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4">
-          <Logo size={48} variant="a" wordClass={aldrich.className} />
+          <Logo size={54} variant="a" wordClass={michroma.className} estScale={1.5} />
           <nav className="hidden items-center gap-9 md:flex">
             {nav.map((item) => (
               <a
@@ -96,15 +121,41 @@ export default function SitePreview() {
 
       {/* hero */}
       <section className="relative h-[78vh] min-h-[480px] overflow-hidden">
-        <Image
-          key={heroOption.src}
-          src={heroOption.src}
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className={`object-cover ${heroOption.focusMobile} ${heroOption.focusDesktop} ${heroOption.blur ? "scale-105 blur-[3px]" : ""}`}
-        />
+        {fit === "full" ? (
+          <>
+            {/* Blurred copy of the same photograph fills the sides. */}
+            <Image
+              key={`${heroOption.src}-bg`}
+              src={heroOption.src} alt="" fill priority sizes="100vw"
+              className="scale-125 object-cover blur-[36px] saturate-[1.15]"
+            />
+            <div className="absolute inset-0 flex justify-center">
+              <div className="relative h-full" style={{ aspectRatio: "4 / 5" }}>
+                <Image
+                  key={heroOption.src}
+                  src={heroOption.src} alt="" fill priority
+                  sizes="(min-width: 768px) 62vh, 100vw"
+                  className="object-contain"
+                />
+              </div>
+            </div>
+          </>
+        ) : (
+          <Image
+            key={heroOption.src}
+            src={heroOption.src}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            /* Blur is set per breakpoint. A fixed pixel radius reads far
+               stronger on a narrow viewport, which is why the phone looked
+               blurrier than the desktop at the same value. */
+            className={`object-cover ${heroOption.focusMobile} ${
+              fit === "top" ? heroOption.focusDesktopTop : heroOption.focusDesktopShift
+            } ${heroOption.blur ? "scale-105 blur-[2px] md:blur-[4px]" : ""}`}
+          />
+        )}
         <div className="absolute inset-0" style={{ backgroundColor: `rgba(15,15,17,${heroOption.scrim})` }} />
         <div className="absolute inset-0 flex items-center">
           <div className="mx-auto w-full max-w-[1400px] px-6">
@@ -225,7 +276,7 @@ export default function SitePreview() {
 
       <footer className="border-t border-neutral-900/10">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-6 px-6 py-12">
-          <Logo size={40} variant="a" wordClass={aldrich.className} />
+          <Logo size={46} variant="a" wordClass={michroma.className} estScale={1.5} />
           {/* Always the current year, not the founding year. */}
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
             &copy; {new Date().getFullYear()} {shop.name}

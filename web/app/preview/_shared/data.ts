@@ -50,10 +50,31 @@ export interface IHeroOption {
      a desktop's wide one, so the two need different crops to show the same
      part of the photograph. */
   focusMobile: string;
-  focusDesktop: string;
+  /* Desktop crops, one per fit mode. See heroFits. */
+  focusDesktopShift: string;
+  focusDesktopTop: string;
   scrim: number;
   blur: boolean;
 }
+
+/*
+ * How the hero photograph fills a wide banner.
+ *
+ * "Generative fill" is not on the table: nothing here can invent pixels, and I
+ * am not going to pretend otherwise. "Full frame" is the standard alternative
+ * and is what streaming services and photo viewers use for the same problem.
+ * The whole 4:5 frame sits centred and uncropped, and the empty sides are
+ * filled by a scaled, heavily blurred copy of the same photograph. Nothing is
+ * fabricated, the colour matches exactly because it is the same pixels, and no
+ * part of the composition is lost.
+ */
+export const heroFits = [
+  { id: "shift", label: "Shifted", note: "Cropped, pulled left so the signature on the right edge stays out of frame, and raised so the top of the head reads." },
+  { id: "top", label: "Top edge", note: "Cropped hard to the very top of the frame, matching what the phone shows." },
+  { id: "full", label: "Full frame", note: "The whole 4:5 photograph, uncropped, with the sides filled by a blurred copy of itself. No pixels invented." }
+] as const;
+
+export type HeroFit = typeof heroFits[number]["id"];
 
 /*
  * Hero candidates, all your own photographs.
@@ -71,9 +92,10 @@ export const heroOptions: IHeroOption[] = [
     id: "adrian3",
     src: "/img/10_Adrian_3.JPG",
     label: "Adrian 3",
-    note: "Back of the head, blue braids. The blue already agrees with the cyan. Desktop pulls the crop up to hold more of the top of the frame; the phone crop is left alone.",
+    note: "Back of the head, blue braids. The blue already agrees with the cyan. The phone crop is untouched.",
     focusMobile: "object-[50%_34%]",
-    focusDesktop: "md:object-[50%_12%]",
+    focusDesktopShift: "md:object-[34%_14%]",
+    focusDesktopTop: "md:object-[34%_0%]",
     scrim: 0.5,
     blur: true
   },
@@ -83,7 +105,8 @@ export const heroOptions: IHeroOption[] = [
     label: "Cam 2",
     note: "The most composed of the set. Reads luxury rather than edge.",
     focusMobile: "object-[50%_38%]",
-    focusDesktop: "md:object-[50%_18%]",
+    focusDesktopShift: "md:object-[42%_18%]",
+    focusDesktopTop: "md:object-[42%_0%]",
     scrim: 0.42,
     blur: false
   },
@@ -93,7 +116,8 @@ export const heroOptions: IHeroOption[] = [
     label: "Hoang 1",
     note: "Harder and more street. Furthest from quiet luxury.",
     focusMobile: "object-[50%_40%]",
-    focusDesktop: "md:object-[50%_20%]",
+    focusDesktopShift: "md:object-[42%_20%]",
+    focusDesktopTop: "md:object-[42%_0%]",
     scrim: 0.42,
     blur: false
   },
@@ -103,7 +127,8 @@ export const heroOptions: IHeroOption[] = [
     label: "KSG 1",
     note: "Simple and clean. Promoting this to hero moves Murthi 1 into the services slot.",
     focusMobile: "object-[50%_32%]",
-    focusDesktop: "md:object-[50%_16%]",
+    focusDesktopShift: "md:object-[42%_16%]",
+    focusDesktopTop: "md:object-[42%_0%]",
     scrim: 0.48,
     blur: false
   }
