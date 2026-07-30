@@ -10,9 +10,15 @@
  * Clicking a photograph opens it large rather than navigating to the file, which
  * is what "open in new tab" was doing before: browsers download a bare .JPG
  * instead of displaying it. The lightbox keeps people on the page.
+ *
+ * The lightbox is portalled to document.body. Rendered in place it was nested
+ * inside a Reveal, and a transformed ancestor becomes the containing block for
+ * position: fixed, so the overlay anchored itself to the gallery rather than to
+ * the viewport. Scrolled down, its close button sat off screen with no way back.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { artwork, rowOne, rowTwo } from "./data";
 
@@ -175,6 +181,9 @@ function Lightbox({
 export function Gallery() {
   const [tab, setTab] = useState("haircuts");
   const [open, setOpen] = useState<{ photos: string[]; index: number } | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   const step = useCallback((delta: number) => {
     setOpen((current) => {
@@ -227,13 +236,14 @@ export function Gallery() {
         </p>
       )}
 
-      {open && (
+      {mounted && open && createPortal(
         <Lightbox
           photos={open.photos}
           index={open.index}
           onClose={() => setOpen(null)}
           onStep={step}
-        />
+        />,
+        document.body
       )}
     </div>
   );

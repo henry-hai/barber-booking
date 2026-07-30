@@ -34,7 +34,7 @@ const SECTIONS: Array<[string, string]> = [
 export default function SitePreview() {
   const [heroId, setHeroId] = useState(heroOptions[0].id);
   const [fit, setFit] = useState<HeroFit>("high");
-  const [estColor, setEstColor] = useState<EstColor>("gradient");
+  const [estColor, setEstColor] = useState<EstColor>("deep");
   const [estBig, setEstBig] = useState(true);
   const heroOption = heroOptions.find((option) => option.id === heroId) ?? heroOptions[0];
   const fitOption = heroFits.find((option) => option.id === fit) ?? heroFits[0];
@@ -150,7 +150,35 @@ export default function SitePreview() {
 
       {/* hero */}
       <section className="relative h-[78vh] min-h-[480px] overflow-hidden">
-        {fit === "full" ? (
+        {fit === "triptych" && heroOption.triptych ? (
+          /*
+            Three frames of the same sitting, the option's own photograph in the
+            centre so the panel is symmetrical. On a phone there is no room for
+            three, so it falls back to the single mobile crop.
+          */
+          <>
+            <Image
+              key={`${heroOption.src}-tm`}
+              src={heroOption.src} alt="" fill priority sizes="100vw"
+              style={{ objectPosition: heroOption.focusMobile }}
+              className={`object-cover md:hidden ${heroOption.blur ? "scale-105 blur-[2px]" : ""}`}
+            />
+            <div className="hidden h-full md:flex">
+              {heroOption.triptych.map((src, index) => (
+                <div key={src} className="relative h-full flex-1">
+                  <Image
+                    src={src} alt="" fill priority sizes="34vw"
+                    style={{ objectPosition: index === 1 ? "50% 22%" : "50% 30%" }}
+                    className={`object-cover ${heroOption.blur ? "blur-[4px]" : ""}`}
+                  />
+                  {index < 2 && (
+                    <span className="absolute inset-y-0 right-0 w-px bg-white/15" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        ) : fit === "full" || fit === "triptych" ? (
           <>
             {/* Blurred copy of the same photograph fills the sides. */}
             <Image
