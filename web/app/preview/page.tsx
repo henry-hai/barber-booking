@@ -26,6 +26,36 @@ const michroma = Michroma({ subsets: ["latin"], weight: "400" });
 
 const SERIF = "ui-serif, 'Iowan Old Style', 'Palatino Linotype', Georgia, serif";
 
+/*
+ * Treatments for the hero type. White is the safe default; the rest exist
+ * because a photograph behind text is never uniform, and the eye needs either
+ * more weight, more separation, or more colour to hold the line.
+ */
+type HeroType = "white" | "shadow" | "cyan" | "bone";
+
+const HERO_TYPE: Record<HeroType, { label: string; note: string; title: string; sub: string; eyebrow: string }> = {
+  white: {
+    label: "White", note: "Plain white. Cleanest, relies entirely on the scrim.",
+    title: "text-white", sub: "text-white/75", eyebrow: "text-white/80"
+  },
+  shadow: {
+    label: "White + shadow", note: "White with a soft drop shadow, so it holds over the light parts of the photograph without darkening the whole frame.",
+    title: "text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.55)]",
+    sub: "text-white/85 [text-shadow:0_1px_12px_rgba(0,0,0,0.5)]",
+    eyebrow: "text-white/90 [text-shadow:0_1px_10px_rgba(0,0,0,0.5)]"
+  },
+  cyan: {
+    label: "Cyan eyebrow", note: "White headline with the label in brand cyan. Adds colour without tinting the name itself.",
+    title: "text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.5)]",
+    sub: "text-white/80", eyebrow: "text-[#22c3dd] [text-shadow:0_1px_10px_rgba(0,0,0,0.6)]"
+  },
+  bone: {
+    label: "Bone", note: "The site's own bone rather than pure white. Warmer, and ties the hero to the page below it.",
+    title: "text-[#f5f2ee] [text-shadow:0_2px_24px_rgba(0,0,0,0.5)]",
+    sub: "text-[#f5f2ee]/75", eyebrow: "text-[#f5f2ee]/80"
+  }
+};
+
 const SECTIONS: Array<[string, string]> = [
   ["about", "About"], ["services", "Services"],
   ["gallery", "Gallery"], ["locations", "Locations"], ["book", "Book"]
@@ -36,6 +66,7 @@ export default function SitePreview() {
   const [fit, setFit] = useState<HeroFit>("high");
   const [estColor, setEstColor] = useState<EstColor>("deep");
   const [estBig, setEstBig] = useState(true);
+  const [heroType, setHeroType] = useState<HeroType>("white");
   const heroOption = heroOptions.find((option) => option.id === heroId) ?? heroOptions[0];
   const fitOption = heroFits.find((option) => option.id === fit) ?? heroFits[0];
   /* KSG 1 cannot be both hero and services photo. */
@@ -119,15 +150,33 @@ export default function SitePreview() {
           </button>
         </div>
 
+        <div className="mx-auto mt-1.5 flex max-w-[1400px] flex-wrap items-center gap-1">
+          <span className="mr-2 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
+            Hero type
+          </span>
+          {(Object.keys(HERO_TYPE) as HeroType[]).map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setHeroType(key)}
+              className={`rounded px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors ${
+                key === heroType ? "bg-[#22c3dd] text-neutral-900" : "text-neutral-400 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              {HERO_TYPE[key].label}
+            </button>
+          ))}
+        </div>
+
         <p className="mx-auto mt-1.5 max-w-[1400px] text-[11px] leading-relaxed text-neutral-500">
-          {heroOption.note} <span className="text-neutral-400">{fitOption.note}</span>
+          {heroOption.note} <span className="text-neutral-400">{fitOption.note}</span> <span className="text-neutral-400">{HERO_TYPE[heroType].note}</span>
         </p>
       </div>
 
       {/* nav */}
       <header className="sticky top-[92px] z-50 border-b border-neutral-900/10 bg-[#f5f2ee]/92 backdrop-blur">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4">
-          <Logo size={54} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} />
+          <Logo size={54} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estMin={estBig ? 12 : 0} />
           <nav className="hidden items-center gap-9 md:flex">
             {nav.map((item) => (
               <a
@@ -187,16 +236,24 @@ export default function SitePreview() {
             <Image
               key={`${heroOption.src}-bg`}
               src={heroOption.src} alt="" fill priority sizes="100vw"
-              /*
-                Sampled from a flat region of the same photograph and scaled
-                far past the frame, so the fill reads as a colour wash drawn
-                from the image rather than as recognisable blurred anatomy.
-              */
+              /* Scaled well past the frame and blurred hard, so the fill is a
+                 wash of the photograph's own colour. Scaling past the frame
+                 also pushes the blur's own edges out of view, which is where
+                 the hard bands were coming from. */
               style={{ objectPosition: heroOption.backdropFocus }}
-              className="scale-[2.6] object-cover blur-[64px] saturate-[1.1]"
+              className="scale-[1.8] object-cover blur-[80px] saturate-[1.05] brightness-[0.85]"
             />
             <div className="absolute inset-0 flex justify-center">
-              <div className="relative h-full" style={{ aspectRatio: "4 / 5" }}>
+              {/* Feathered left and right so the centre frame dissolves into
+                  the wash instead of meeting it at a hard vertical cut. */}
+              <div
+                className="relative h-full"
+                style={{
+                  aspectRatio: "4 / 5",
+                  maskImage: "linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%)",
+                  WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%)"
+                }}
+              >
                 <Image
                   key={heroOption.src}
                   src={heroOption.src} alt="" fill priority
@@ -236,18 +293,18 @@ export default function SitePreview() {
         <div className="absolute inset-0 flex items-center">
           <div className="mx-auto w-full max-w-[1400px] px-6">
             <Reveal>
-              <p className="font-mono text-[12px] uppercase tracking-[0.3em] text-white/80">
+              <p className={`font-mono text-[12px] uppercase tracking-[0.3em] ${HERO_TYPE[heroType].eyebrow}`}>
                 Est. {shop.est} &middot; Milpitas &amp; Irvine
               </p>
             </Reveal>
             <Reveal delay={130}>
               <h1
-                className="mt-6 max-w-3xl text-[clamp(2.4rem,6vw,4.75rem)] leading-[1.02] tracking-[-0.025em] text-white"
+                className={`mt-6 max-w-3xl text-[clamp(2.4rem,6vw,4.75rem)] leading-[1.02] tracking-[-0.025em] ${HERO_TYPE[heroType].title}`}
                 style={{ fontFamily: SERIF }}
               >
                 {shop.name}
               </h1>
-              <p className="mt-5 max-w-xl text-[clamp(1rem,1.6vw,1.25rem)] leading-relaxed text-white/75">
+              <p className={`mt-5 max-w-xl text-[clamp(1rem,1.6vw,1.25rem)] leading-relaxed ${HERO_TYPE[heroType].sub}`}>
                 Personalized, luxury haircuts.
               </p>
             </Reveal>
@@ -352,7 +409,7 @@ export default function SitePreview() {
 
       <footer className="border-t border-neutral-900/10">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-6 px-6 py-12">
-          <Logo size={46} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} />
+          <Logo size={46} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estMin={estBig ? 12 : 0} />
           {/* Always the current year, not the founding year. */}
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
             &copy; {new Date().getFullYear()} {shop.name}
