@@ -61,9 +61,9 @@ export interface IHeroOption {
   focusLow: string;
   scrim: number;
   blur: boolean;
-  /* Three frames of the same sitting, for the triptych fit. Centre frame is
-     this option's own photograph, so the panel stays symmetrical. */
+  /* Frames of the same sitting, for the triptych and diptych fits. */
   triptych?: string[];
+  diptych?: string[];
 }
 
 /*
@@ -81,7 +81,8 @@ export const heroFits = [
   { id: "high", label: "High", note: "Shifted right so the signature clears the edge, and raised, though not to the very top of the frame." },
   { id: "low", label: "Low", note: "Shifted right and dropped, leaving space above the head. Closest to how the phone reads." },
   { id: "full", label: "Full frame", note: "The whole 4:5 photograph, uncropped, with the sides filled by a blurred copy of itself. No pixels invented." },
-  { id: "triptych", label: "Triptych", note: "Three frames of the same sitting, Adrian 1, 3 and 2, with 3 in the centre so the panel reads symmetrically. Falls back to full frame where a set of three does not exist." }
+  { id: "triptych", label: "Triptych", note: "Three frames of the same sitting, Adrian 2, 1 and 3. Falls back to full frame where a set does not exist." },
+  { id: "diptych", label: "Diptych", note: "Two frames, Adrian 1 and 3, split down the middle. Falls back to full frame where a set does not exist." }
 ] as const;
 
 export type HeroFit = typeof heroFits[number]["id"];
@@ -104,11 +105,12 @@ export const heroOptions: IHeroOption[] = [
     label: "Adrian 3",
     note: "Back of the head, blue braids. The blue already agrees with the cyan. The phone crop is untouched.",
     focusMobile: "50% 34%",
-    focusHigh: "30% 10%",
-    focusLow: "30% 32%",
+    focusHigh: "18% 4%",
+    focusLow: "18% 30%",
     scrim: 0.5,
     blur: true,
-    triptych: ["/img/8_Adrian_1.JPG", "/img/10_Adrian_3.JPG", "/img/9_Adrian_2.JPG"]
+    triptych: ["/img/9_Adrian_2.JPG", "/img/8_Adrian_1.JPG", "/img/10_Adrian_3.JPG"],
+    diptych: ["/img/8_Adrian_1.JPG", "/img/10_Adrian_3.JPG"]
   },
   {
     id: "cam2",

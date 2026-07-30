@@ -36,10 +36,15 @@ export default function SitePreview() {
   const [fit, setFit] = useState<HeroFit>("high");
   const [estColor, setEstColor] = useState<EstColor>("deep");
   const [estBig, setEstBig] = useState(true);
+  const [estFlip, setEstFlip] = useState(false);
   const heroOption = heroOptions.find((option) => option.id === heroId) ?? heroOptions[0];
   const fitOption = heroFits.find((option) => option.id === fit) ?? heroFits[0];
   /* KSG 1 cannot be both hero and services photo. */
   const menuPhoto = heroOption.id === "ksg1" ? servicesPhotoAlt : servicesPhoto;
+  /* The frames for a multi-panel fit, or null when this hero has no set. */
+  const panels = fit === "triptych" ? heroOption.triptych
+    : fit === "diptych" ? heroOption.diptych
+    : null;
 
   return (
     <div className="bg-[#f5f2ee] text-neutral-900">
@@ -108,6 +113,15 @@ export default function SitePreview() {
           ))}
           <button
             type="button"
+            onClick={() => setEstFlip((value) => !value)}
+            className={`ml-3 rounded px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors ${
+              estFlip ? "bg-[#0be6f9] text-neutral-900" : "text-neutral-400 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            {estFlip ? "Light at top" : "Light at base"}
+          </button>
+          <button
+            type="button"
             onClick={() => setEstBig((value) => !value)}
             className={`ml-3 rounded px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors ${
               estBig ? "bg-white text-neutral-900" : "text-neutral-400 hover:bg-white/10 hover:text-white"
@@ -125,7 +139,7 @@ export default function SitePreview() {
       {/* nav */}
       <header className="sticky top-[92px] z-50 border-b border-neutral-900/10 bg-[#f5f2ee]/92 backdrop-blur">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4">
-          <Logo size={54} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} />
+          <Logo size={54} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estFlip={estFlip} />
           <nav className="hidden items-center gap-9 md:flex">
             {nav.map((item) => (
               <a
@@ -150,7 +164,7 @@ export default function SitePreview() {
 
       {/* hero */}
       <section className="relative h-[78vh] min-h-[480px] overflow-hidden">
-        {fit === "triptych" && heroOption.triptych ? (
+        {panels ? (
           /*
             Three frames of the same sitting, the option's own photograph in the
             centre so the panel is symmetrical. On a phone there is no room for
@@ -164,27 +178,31 @@ export default function SitePreview() {
               className={`object-cover md:hidden ${heroOption.blur ? "scale-105 blur-[2px]" : ""}`}
             />
             <div className="hidden h-full md:flex">
-              {heroOption.triptych.map((src, index) => (
-                <div key={src} className="relative h-full flex-1">
+              {panels.map((src, index) => (
+                <div key={`${src}-${index}`} className="relative h-full flex-1">
                   <Image
-                    src={src} alt="" fill priority sizes="34vw"
-                    style={{ objectPosition: index === 1 ? "50% 22%" : "50% 30%" }}
+                    src={src} alt="" fill priority
+                    sizes={`${Math.round(100 / panels.length)}vw`}
+                    style={{ objectPosition: "50% 26%" }}
                     className={`object-cover ${heroOption.blur ? "blur-[4px]" : ""}`}
                   />
-                  {index < 2 && (
+                  {index < panels.length - 1 && (
                     <span className="absolute inset-y-0 right-0 w-px bg-white/15" />
                   )}
                 </div>
               ))}
             </div>
           </>
-        ) : fit === "full" || fit === "triptych" ? (
+        ) : fit === "full" || fit === "triptych" || fit === "diptych" ? (
           <>
             {/* Blurred copy of the same photograph fills the sides. */}
             <Image
               key={`${heroOption.src}-bg`}
               src={heroOption.src} alt="" fill priority sizes="100vw"
-              className="scale-125 object-cover blur-[36px] saturate-[1.15]"
+              /* Pulled up and scaled harder so the fill is mostly hair rather
+                 than ears and blurred skin. */
+              style={{ objectPosition: "50% 4%" }}
+              className="scale-150 object-cover blur-[44px] saturate-[1.2]"
             />
             <div className="absolute inset-0 flex justify-center">
               <div className="relative h-full" style={{ aspectRatio: "4 / 5" }}>
@@ -343,7 +361,7 @@ export default function SitePreview() {
 
       <footer className="border-t border-neutral-900/10">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-6 px-6 py-12">
-          <Logo size={46} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} />
+          <Logo size={46} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estFlip={estFlip} />
           {/* Always the current year, not the founding year. */}
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
             &copy; {new Date().getFullYear()} {shop.name}
