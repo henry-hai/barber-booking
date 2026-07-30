@@ -1,10 +1,10 @@
 # Barbering Booking Platform
 
-A full-stack barbering booking platform serving 300+ clients, built with React, Node.js, Express, TypeScript, and Webpack. The public site handles appointment requests through EmailJS, with an n8n automation layer that turns booking emails into structured rows in Google Sheets. A separate Express API powers a React app with two views: an **appointments dashboard** that reads the booking data live via the Google Sheets API, and a mail client that uses Gmail over SMTP/IMAP.
+A full-stack barbering booking platform serving 300+ clients, built with Next.js, React, Node.js, Express, and TypeScript. The public site takes appointment requests through a server-side booking route, which sends the client a confirmation and the owner a notification that an n8n automation layer turns into a structured row in Google Sheets. A separate Express API powers a React app with two views: an **appointments dashboard** that reads the booking data live via the Google Sheets API, and a mail client that uses Gmail over SMTP/IMAP.
 
-## Live static site
+## Public site
 
-The customer-facing barbering site is deployed with **GitHub Pages** from a dedicated static repo:
+The customer-facing barbering site is a statically generated Next.js app in `web/`. It is not deployed yet; the currently live site is the earlier hand-rolled static version, served by **GitHub Pages** from a dedicated repo:
 
 - **Live site:** [henry-hai.github.io/barber_website/](https://henry-hai.github.io/barber_website/)
 - **Source repo:** [github.com/henry-hai/barber_website](https://github.com/henry-hai/barber_website)
@@ -25,12 +25,17 @@ A React dashboard reads booking requests **live** from the Google Sheet that the
 ## Architecture
 
 ```
-Browser  -->  Static Site (index.html, Webpack bundle)
-              React Navbar + TypeScript Gallery
+Browser  -->  Next.js site (web/)
+              Marketing pages, gallery, booking form
 
-Appointment form  -->  EmailJS  -->  inbox notifications
-                      |
-                      +-->  n8n  -->  Gmail trigger -> JS transform -> Google Sheets
+Booking form  -->  POST /booking  -->  Gmail SMTP
+                                        |
+                                        +-->  confirmation email to the client
+                                        |
+                                        +-->  notification email to the owner
+                                                |
+                                                v
+                                          n8n: Gmail trigger -> JSON parse -> Google Sheets
 
 Browser  -->  React SPA (client/)  -->  Express API (server/)  -->  Gmail (SMTP/IMAP)
               Dashboard + Mailroom            |    |
@@ -38,46 +43,76 @@ Browser  -->  React SPA (client/)  -->  Express API (server/)  -->  Gmail (SMTP/
                                           NeDB (contacts)
 ```
 
-**Root** -- The barbering website: responsive single-page site with a React navbar component, TypeScript gallery modules bundled by Webpack, Tailwind CSS styling, and an EmailJS-powered booking form. An n8n workflow (Gmail trigger → JavaScript transform → Google Sheets append) captures each booking email as a structured row (configured in the n8n editor, not in this repo).
+**web/** -- The barbering website. Next.js App Router with TypeScript and Tailwind, statically generated with Open Graph metadata and LocalBusiness JSON-LD. The gallery is a tabbed React component using `next/image`; the booking form POSTs to the Express API.
 
-**server/** -- RESTful API built with Node.js and Express. Handles email operations via SMTP (NodeMailer) and IMAP, with an embedded NeDB database for persistent contact storage.
+**server/** -- RESTful API built with Node.js and Express. Handles the booking endpoint and email operations via SMTP (NodeMailer) and IMAP, reads booking data from Google Sheets via a read-only service account, and uses an embedded NeDB database for persistent contact storage.
 
 **client/** -- React SPA with Material-UI components and CSS Grid layout, split into two views via a top-bar toggle: an **appointments dashboard** (booking requests + stats from the Google Sheets API) and a **mail client** (mailboxes, messages, and contact CRUD). Communicates with the server via Axios.
+
+**automation/** -- The exported n8n workflow. See [The booking pipeline](#the-booking-pipeline) below.
+
+## The booking pipeline
+
+A booking travels through four hops, and the contract between them is deliberately narrow.
+
+1. The form in `web/components/BookingForm.tsx` POSTs JSON to `POST /booking`.
+2. `server/src/Booking.ts` revalidates every field, then sends two emails.
+3. The **owner notification**'s plain-text part carries an 11-field JSON object between two fixed sentinels:
+
+   ```
+   ---BOOKING_JSON_START---
+   { "name": ..., "date": ..., "time": ..., ... }
+   ---BOOKING_JSON_END---
+   ```
+
+4. The n8n workflow's Code node extracts that block and runs a single `JSON.parse` on it, then appends the result as a row.
+
+The eleven JSON keys map one-to-one, in order, onto sheet columns **A..K**, and empty fields are the string `"N/A"`. `server/src/Appointments.ts` reads that exact layout back for the dashboard.
+
+Two consequences worth knowing:
+
+- **The HTML part of the notification is presentational only.** Nothing parses it, so it can be redesigned freely without touching the workflow or the sheet.
+- **The key order and the `"N/A"` convention are load-bearing.** Changing either means changing the sheet and `Appointments.ts` together. `server/tests/n8n-contract.test.ts` runs the workflow's own `jsCode` against real notification bodies to catch drift.
+
+The Gmail trigger filters on the subject prefix `Appointment Request from`, so that must stay too.
 
 ## Tech Stack
 
 | Technology | Usage |
 |---|---|
-| React | Navbar component (root), full SPA (client/) |
-| Node.js | Static file server (root), Express API runtime (server/) |
-| Express | RESTful API framework |
-| TypeScript | Gallery modules (root src/), server API, React client |
-| Webpack | Module bundling for TypeScript (root) and React (client/) |
+| Next.js | Public marketing and booking site (`web/`), App Router, static generation |
+| React | Site components (`web/`), full SPA (`client/`) |
+| Node.js | Express API runtime (`server/`) |
+| Express | RESTful API framework, booking endpoint |
+| TypeScript | Site, server API, and React client |
 | Tailwind CSS | Responsive utility-first styling |
-| Material-UI | React component library (client/) |
-| NodeMailer | SMTP email sending |
+| Material-UI | React component library (`client/`) |
+| NodeMailer | Gmail SMTP: booking emails and the mail client |
+| imapflow | Inbound email over Gmail IMAP |
 | NeDB | Embedded document database for contacts |
 | Axios | HTTP client for API communication |
-| EmailJS | Client-side appointment form: sends booking requests to email |
-| n8n | Automation workflow: Gmail trigger → JavaScript transform → Google Sheets |
+| n8n | Automation workflow: Gmail trigger → JSON parse → Google Sheets |
 | Google Sheets API | Reads booking data into the dashboard via a read-only GCP service account |
+| Vitest + Testing Library | Component, validation and serializer tests |
+| Playwright | End-to-end booking path |
 
 ## Getting Started
 
-### Static Barbering Site
-
-No build step needed to view the site. Start the Node.js server and open in browser:
+### Public site
 
 ```bash
+cd web
 npm install
-node server.js
+npm run dev
 ```
 
-Visit `http://localhost:3000`. To rebuild the Webpack bundle after editing TypeScript:
+Visit `http://localhost:3000`. Point the booking form at a running API with `NEXT_PUBLIC_API_BASE_URL` (defaults to `http://localhost:8080`):
 
 ```bash
-npx webpack
+echo "NEXT_PUBLIC_API_BASE_URL=http://localhost:8080" > .env.local
 ```
+
+Gallery photos live in `web/public/img/`. The Artwork tab expects four files in `web/public/img/artwork/` -- see the README there.
 
 ### Backend API Server
 
@@ -90,8 +125,8 @@ cp serverInfo.example.json serverInfo.json
 Edit `serverInfo.json` with your Gmail address and [App Password](https://support.google.com/accounts/answer/185833), then:
 
 ```bash
-npx tsc
-node dist/main.js
+npm run build
+npm start
 ```
 
 The API starts on `http://localhost:8080`.
@@ -106,10 +141,20 @@ npm run build
 
 Open `http://localhost:8080` to view the React client (served by the backend).
 
+## Tests
+
+```bash
+npm test           # web + server unit tests
+npm run test:e2e   # Playwright booking path
+```
+
+Everything runs with no secrets. The end-to-end suite mounts the real booking handler with a recording mailer in place of NodeMailer, so no test reaches Gmail, Sheets or n8n. CI runs all three suites on every push and pull request.
+
 ## API Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
+| POST | `/booking` | Submit an appointment request; sends the client confirmation and owner notification |
 | GET | `/appointments` | List booking requests from the Google Sheet (newest first) |
 | GET | `/mailboxes` | List all mailboxes |
 | GET | `/mailboxes/:mailbox` | List messages in a mailbox |
@@ -124,29 +169,55 @@ Open `http://localhost:8080` to view the React client (served by the backend).
 
 ```
 barber-booking/
-├── index.html              # Barbering site (React navbar, Tailwind CSS)
-├── server.js               # Node.js static file server
-├── package.json            # Webpack + TypeScript dependencies
-├── tsconfig.json           # TypeScript compiler config
-├── webpack.config.js       # Webpack bundler config
-├── img/                    # Barbering portfolio photos
+├── package.json            # Monorepo scripts delegating to web/, server/, client/
+├── .github/workflows/ci.yml
 ├── screenshots/            # README images (static site + dashboard)
 ├── automation/
-│   └── Barber_Log.json     # Exported n8n workflow (Gmail -> JS -> Sheets)
-├── src/                    # TypeScript gallery modules
-│   ├── index.ts            # Entry point (Webpack starts here)
-│   ├── Gallery.ts          # Gallery class (implements IGallery)
-│   ├── GalleryRow.ts       # GalleryRow class (implements IGalleryRow)
-│   ├── interfaces.ts       # TypeScript interfaces
-│   └── utils.ts            # Utility functions
+│   └── Barber_Log.json     # Exported n8n workflow (Gmail -> JSON parse -> Sheets)
+├── web/                    # Next.js public site
+│   ├── app/
+│   │   ├── layout.tsx      # Root layout, metadata and Open Graph tags
+│   │   ├── page.tsx        # The barbering site
+│   │   ├── globals.css     # Tailwind entry point
+│   │   ├── robots.ts
+│   │   └── sitemap.ts
+│   ├── components/
+│   │   ├── Navbar.tsx
+│   │   ├── Gallery.tsx     # Tabbed gallery (Haircuts, Artwork)
+│   │   ├── GalleryRow.tsx  # One horizontally scrolling row
+│   │   ├── BookingForm.tsx
+│   │   └── Footer.tsx
+│   ├── lib/
+│   │   ├── site.ts         # Shop details, services, locations, policies
+│   │   ├── gallery.ts      # Gallery tabs and photo lists
+│   │   ├── booking.ts      # Booking form shape and client-side validation
+│   │   └── api.ts          # API base URL
+│   ├── public/img/         # Barbering portfolio photos
+│   ├── tests/
+│   │   ├── unit/           # Vitest + React Testing Library
+│   │   └── e2e/            # Playwright
+│   ├── tailwind.config.ts
+│   ├── next.config.mjs
+│   ├── playwright.config.ts
+│   ├── vitest.config.ts
+│   └── vercel.json
 ├── server/                 # Express REST API backend
 │   ├── src/
 │   │   ├── main.ts         # Express app and route definitions
+│   │   ├── Booking.ts      # Booking validation, A..K payload, both emails
+│   │   ├── BookingEmails.ts# HTML and plain-text email templates
+│   │   ├── RateLimit.ts    # In-memory rate limiter
 │   │   ├── Appointments.ts # Google Sheets reader (service account)
 │   │   ├── SMTP.ts         # NodeMailer email sending
 │   │   ├── IMAP.ts         # IMAP email reading
 │   │   ├── contacts.ts     # NeDB contact CRUD
 │   │   └── ServerInfo.ts   # Config loader
+│   ├── tests/
+│   │   ├── booking.test.ts
+│   │   ├── emails.test.ts
+│   │   ├── n8n-contract.test.ts
+│   │   ├── ratelimit.test.ts
+│   │   └── e2e-harness.mjs # Real booking handler + recording mailer
 │   ├── package.json
 │   ├── tsconfig.json
 │   └── serverInfo.example.json
@@ -178,6 +249,3 @@ barber-booking/
     ├── tsconfig.json
     └── webpack.config.js
 ```
-
-
-
