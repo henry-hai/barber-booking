@@ -19,7 +19,7 @@ import {
   BookingForm, Locations, MobileMenu, Reveal, SectionIndex, ServicesMenu
 } from "./_shared/Parts";
 import {
-  heroFits, heroOptions, nav, servicesPhoto, servicesPhotoAlt, shop, type HeroFit
+  TRIPTYCHS, heroFits, heroOptions, nav, servicesPhoto, servicesPhotoAlt, shop, type HeroFit
 } from "./_shared/data";
 
 const michroma = Michroma({ subsets: ["latin"], weight: "400" });
@@ -61,17 +61,18 @@ const HERO_TYPE: Record<HeroType, { label: string; note: string; title: string; 
 /*
  * How adjacent triptych panels meet.
  *
- * A hard join reads as three photographs; too much feather turns them to mush
- * and loses the edges of the haircuts. The middle settings keep each frame
- * legible while removing the seam as a line.
+ * `gap` is real space between the panels, `feather` is how far each photograph
+ * fades into that space. A gap with no feather is a hard line; feather with no
+ * gap makes the frames bleed into each other. Together they give separation
+ * without a drawn edge, which is what the wash behind them is for.
  */
-type Seam = "line" | "soft" | "blend" | "wide";
+type Seam = "line" | "soft" | "open" | "blend";
 
-const SEAMS: Record<Seam, { label: string; note: string; feather: number; rule: boolean }> = {
-  line: { label: "Hairline", note: "A clean 1px rule between panels. Reads as a deliberate grid.", feather: 0, rule: true },
-  soft: { label: "Soft", note: "A narrow 6 percent fade at each join. The seam stops being a line but each frame keeps its edge.", feather: 6, rule: false },
-  blend: { label: "Blended", note: "A 14 percent fade. The three read as one continuous band.", feather: 14, rule: false },
-  wide: { label: "Wide", note: "A 24 percent fade. Softest of the four, and the point where the outer haircuts start to lose definition.", feather: 24, rule: false }
+const SEAMS: Record<Seam, { label: string; note: string; gap: number; feather: number; rule: boolean }> = {
+  line: { label: "Hairline", note: "A clean 1px rule between panels. The only setting with a drawn edge.", gap: 0, feather: 0, rule: true },
+  soft: { label: "Soft gap", note: "A narrow gap with the photograph edges fading into it, so the frames are separated by light rather than by a line.", gap: 1.6, feather: 5, rule: false },
+  open: { label: "Open gap", note: "A wider gap and a deeper fade. More air between the three, still no edge.", gap: 3.4, feather: 8, rule: false },
+  blend: { label: "Blended", note: "No gap at all, the frames dissolving directly into one another.", gap: 0, feather: 12, rule: false }
 };
 
 const SECTIONS: Array<[string, string]> = [
@@ -91,9 +92,7 @@ export default function SitePreview() {
   /* KSG 1 cannot be both hero and services photo. */
   const menuPhoto = heroOption.id === "ksg1" ? servicesPhotoAlt : servicesPhoto;
   /* The frames for a multi-panel fit, or null when this hero has no set. */
-  const panels = fit === "triptych" ? heroOption.triptych
-    : fit === "triptych2" ? heroOption.triptych2
-    : null;
+  const panels = fit === "triptych" || fit === "triptych2" ? TRIPTYCHS[fit] : null;
   const isTriptych = fit === "triptych" || fit === "triptych2";
 
   return (
@@ -263,10 +262,16 @@ export default function SitePreview() {
               <Image
                 src={panels[1]} alt="" fill sizes="100vw"
                 style={{ objectPosition: "50% 30%" }}
-                className="scale-[1.6] object-cover blur-[70px] brightness-[0.95]"
+                className="scale-[1.6] object-cover blur-[70px] brightness-[1.7] saturate-[0.25]"
               />
+              {/* Light veil, so the gaps between panels read as air rather than
+                  as a dark band showing through. */}
+              <div className="absolute inset-0 bg-[#f2eee8]/70" />
             </div>
-            <div className="relative hidden h-full md:flex">
+            <div
+              className="relative hidden h-full md:flex"
+              style={{ gap: `${SEAMS[seam].gap}%` }}
+            >
               {panels.map((src, index) => {
                 const { feather, rule } = SEAMS[seam];
                 /* Only the edges that touch another panel are faded, so the
@@ -316,11 +321,11 @@ export default function SitePreview() {
                 where the hard bands were coming from.
               */
               style={{ objectPosition: heroOption.backdropFocus }}
-              className="scale-[1.9] object-cover blur-[90px] brightness-[1.55] saturate-[0.35]"
+              className="scale-[1.9] object-cover blur-[90px] brightness-[1.9] saturate-[0.2]"
             />
             {/* Bone laid over the wash, so the ground is unmistakably light and
                 any residual detail from the photograph cannot read through. */}
-            <div className="absolute inset-0 bg-[#f0ece6]/72" />
+            <div className="absolute inset-0 bg-[#f2eee8]/82" />
             <div className="absolute inset-0 flex justify-center">
               {/* Feathered left and right so the centre frame dissolves into
                   the wash instead of meeting it at a hard vertical cut. */}
@@ -498,7 +503,7 @@ export default function SitePreview() {
 
       <footer className="border-t border-neutral-900/10">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-6 px-6 py-12">
-          <Logo size={46} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estMin={estBig ? 8 : 0} />
+          <Logo size={54} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estMin={estBig ? 8 : 0} />
           {/* Always the current year, not the founding year. */}
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
             &copy; {new Date().getFullYear()} {shop.name}
