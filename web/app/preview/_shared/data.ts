@@ -111,7 +111,7 @@ export const heroOptions: IHeroOption[] = [
     focusLow: "18% 30%",
     scrim: 0.5,
     blur: true,
-    backdropFocus: "6% 22%",
+    backdropFocus: "4% 46%",
     triptych: ["/img/20_Cam_2.jpg", "/img/10_Adrian_3.JPG", "/img/26_Hoang_1.jpg"]
   },
   {
@@ -122,7 +122,7 @@ export const heroOptions: IHeroOption[] = [
     focusMobile: "50% 38%",
     focusHigh: "34% 10%",
     focusLow: "34% 30%",
-    backdropFocus: "8% 20%",
+    backdropFocus: "6% 46%",
     scrim: 0.42,
     blur: false
   },
@@ -134,7 +134,7 @@ export const heroOptions: IHeroOption[] = [
     focusMobile: "50% 40%",
     focusHigh: "34% 10%",
     focusLow: "34% 32%",
-    backdropFocus: "8% 20%",
+    backdropFocus: "6% 46%",
     scrim: 0.42,
     blur: false
   },
@@ -146,7 +146,7 @@ export const heroOptions: IHeroOption[] = [
     focusMobile: "50% 32%",
     focusHigh: "34% 10%",
     focusLow: "34% 28%",
-    backdropFocus: "8% 20%",
+    backdropFocus: "6% 46%",
     scrim: 0.48,
     blur: false
   }
