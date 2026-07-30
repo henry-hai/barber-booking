@@ -91,7 +91,10 @@ export default function SitePreview() {
   /* KSG 1 cannot be both hero and services photo. */
   const menuPhoto = heroOption.id === "ksg1" ? servicesPhotoAlt : servicesPhoto;
   /* The frames for a multi-panel fit, or null when this hero has no set. */
-  const panels = fit === "triptych" ? heroOption.triptych : null;
+  const panels = fit === "triptych" ? heroOption.triptych
+    : fit === "triptych2" ? heroOption.triptych2
+    : null;
+  const isTriptych = fit === "triptych" || fit === "triptych2";
 
   return (
     <div className="bg-[#f5f2ee] text-neutral-900">
@@ -169,7 +172,7 @@ export default function SitePreview() {
           </button>
         </div>
 
-        {fit === "triptych" && (
+        {isTriptych && (
           <div className="mx-auto mt-1.5 flex max-w-[1400px] flex-wrap items-center gap-1">
             <span className="mr-2 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
               Seam
@@ -208,14 +211,14 @@ export default function SitePreview() {
         </div>
 
         <p className="mx-auto mt-1.5 max-w-[1400px] text-[11px] leading-relaxed text-neutral-500">
-          {heroOption.note} <span className="text-neutral-400">{fitOption.note}</span> <span className="text-neutral-400">{HERO_TYPE[heroType].note}</span>{fit === "triptych" && <span className="text-neutral-400"> {SEAMS[seam].note}</span>}
+          {heroOption.note} <span className="text-neutral-400">{fitOption.note}</span> <span className="text-neutral-400">{HERO_TYPE[heroType].note}</span>{isTriptych && <span className="text-neutral-400"> {SEAMS[seam].note}</span>}
         </p>
       </div>
 
       {/* nav */}
       <header className="sticky top-[92px] z-50 border-b border-neutral-900/10 bg-[#f5f2ee]/92 backdrop-blur">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4">
-          <Logo size={54} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estMin={estBig ? 9 : 0} />
+          <Logo size={54} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estMin={estBig ? 8 : 0} />
           <nav className="hidden items-center gap-9 md:flex">
             {nav.map((item) => (
               <a
@@ -253,7 +256,17 @@ export default function SitePreview() {
               style={{ objectPosition: heroOption.focusMobile }}
               className={`object-cover md:hidden ${heroOption.blur ? "scale-105 blur-[2px]" : ""}`}
             />
-            <div className="hidden h-full md:flex">
+            {/* A wash of the centre frame sits behind the panels, so a faded
+                join blends into related colour instead of opening a gap. This
+                is what lets the panels stay at exactly one third each. */}
+            <div className="absolute inset-0 hidden md:block">
+              <Image
+                src={panels[1]} alt="" fill sizes="100vw"
+                style={{ objectPosition: "50% 30%" }}
+                className="scale-[1.6] object-cover blur-[70px] brightness-[0.95]"
+              />
+            </div>
+            <div className="relative hidden h-full md:flex">
               {panels.map((src, index) => {
                 const { feather, rule } = SEAMS[seam];
                 /* Only the edges that touch another panel are faded, so the
@@ -266,8 +279,14 @@ export default function SitePreview() {
                 return (
                   <div
                     key={`${src}-${index}`}
+                    /*
+                      Exactly one third each, with no negative margin. Pulling
+                      the panels together widened each box, and a wider box with
+                      object-cover on a portrait frame crops harder, which is
+                      what made the three read as one zoomed-in creature.
+                    */
                     className="relative h-full flex-1"
-                    style={mask ? { maskImage: mask, WebkitMaskImage: mask, marginLeft: index > 0 ? `-${feather / 2}%` : 0 } : undefined}
+                    style={mask ? { maskImage: mask, WebkitMaskImage: mask } : undefined}
                   >
                     <Image
                       src={src} alt="" fill priority
@@ -283,7 +302,7 @@ export default function SitePreview() {
               })}
             </div>
           </>
-        ) : fit === "full" || fit === "triptych" ? (
+        ) : fit === "full" || isTriptych ? (
           <>
             {/* Blurred copy of the same photograph fills the sides. */}
             <Image
@@ -319,6 +338,10 @@ export default function SitePreview() {
                   sizes="(min-width: 768px) 62vh, 100vw"
                   className="object-contain"
                 />
+                {/* The frame numbers and the signature sit in the top corners
+                    of the originals. A short fade from the ground colour walks
+                    them out without cropping the photograph. */}
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-[18%] bg-gradient-to-b from-[#efebe5] via-[#efebe5]/70 to-transparent" />
               </div>
             </div>
           </>
@@ -475,7 +498,7 @@ export default function SitePreview() {
 
       <footer className="border-t border-neutral-900/10">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-6 px-6 py-12">
-          <Logo size={46} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estMin={estBig ? 9 : 0} />
+          <Logo size={46} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estMin={estBig ? 8 : 0} />
           {/* Always the current year, not the founding year. */}
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
             &copy; {new Date().getFullYear()} {shop.name}

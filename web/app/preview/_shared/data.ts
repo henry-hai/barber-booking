@@ -61,8 +61,9 @@ export interface IHeroOption {
   focusLow: string;
   scrim: number;
   blur: boolean;
-  /* Frames for the triptych fit. */
+  /* Frames for the two triptych fits. */
   triptych?: string[];
+  triptych2?: string[];
   /* Where the blurred backdrop is sampled from for the full frame fit. Aimed at
      a flat, uniform part of the photograph so the fill reads as a wash rather
      than as recognisable blurred anatomy. */
@@ -84,7 +85,8 @@ export const heroFits = [
   { id: "high", label: "High", note: "Shifted right so the signature clears the edge, and raised, though not to the very top of the frame." },
   { id: "low", label: "Low", note: "Shifted right and dropped, leaving space above the head. Closest to how the phone reads." },
   { id: "full", label: "Full frame", note: "The whole 4:5 photograph, uncropped, with the sides filled by a blurred copy of itself. No pixels invented." },
-  { id: "triptych", label: "Triptych", note: "Cam 2, Adrian 3 and Hoang 1 across the banner." }
+  { id: "triptych", label: "Triptych A", note: "Cam 2, Adrian 3 and Hoang 1 across the banner." },
+  { id: "triptych2", label: "Triptych B", note: "Cam 2, Adrian 3 and KSG 1 across the banner." }
 ] as const;
 
 export type HeroFit = typeof heroFits[number]["id"];
@@ -112,7 +114,8 @@ export const heroOptions: IHeroOption[] = [
     scrim: 0.5,
     blur: true,
     backdropFocus: "4% 46%",
-    triptych: ["/img/20_Cam_2.jpg", "/img/10_Adrian_3.JPG", "/img/26_Hoang_1.jpg"]
+    triptych: ["/img/20_Cam_2.jpg", "/img/10_Adrian_3.JPG", "/img/26_Hoang_1.jpg"],
+    triptych2: ["/img/20_Cam_2.jpg", "/img/10_Adrian_3.JPG", "/img/4_KSG_1.JPG"]
   },
   {
     id: "cam2",
