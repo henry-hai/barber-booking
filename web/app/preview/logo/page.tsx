@@ -28,7 +28,8 @@ const michroma = Michroma({ subsets: ["latin"], weight: "400" });
 const saira = Saira({ subsets: ["latin"], weight: ["300", "400"] });
 
 const TYPEFACES = [
-  { name: "Aldrich", note: "Squared bowls, flat apex A, straight R leg. My closest read of the original.", cls: aldrich.className },
+  { name: "Michroma", note: "Your pick. Widest of the set, and the closest to the original's squared geometry. Needs the lockup set large.", cls: michroma.className },
+  { name: "Aldrich", note: "Squared bowls, flat apex A, straight R leg. Narrower than Michroma.", cls: aldrich.className },
   { name: "Electrolize", note: "Thin and even, superelliptical O. Very near, slightly narrower.", cls: electrolize.className },
   { name: "Iceland", note: "Thinnest of the set, wide counters. Reads lighter than the original.", cls: iceland.className },
   { name: "Quantico", note: "Squared with a little more contrast. Slightly more corporate.", cls: quantico.className },
@@ -36,14 +37,13 @@ const TYPEFACES = [
   { name: "Jura", note: "Softened square, humanist details. Warmer, less machined.", cls: jura.className },
   { name: "Share Tech", note: "Narrow techno. Good small, drifts wide of the original.", cls: shareTech.className },
   { name: "Syncopate", note: "Very wide, high contrast. Handsome but a different animal.", cls: syncopate.className },
-  { name: "Michroma", note: "Widest here. Strong large, unusable small.", cls: michroma.className },
   { name: "Saira Light", note: "The closest non-square option, for contrast with the rest.", cls: `${saira.className} font-light` }
 ];
 
 const VARIANTS: Array<{ key: LogoVariant; note: string }> = [
-  { key: "a", note: "Straight off the measurements. 4 unit cuts at 12 degrees." },
-  { key: "b", note: "Same placement, cuts thinned to 3 units." },
-  { key: "c", note: "Cuts steepened to 14 degrees and slightly thicker." },
+  { key: "a", note: "Slip of 8.5 left and 1.5 down. Measured against the original." },
+  { key: "b", note: "Same slip, cuts thinned to 2.5 units." },
+  { key: "c", note: "A harder slip, 12 left. Reads as a heavier cut." },
   { key: "d", note: "Heavier strokes, cuts sitting closer to the crossbar." }
 ];
 
@@ -67,6 +67,15 @@ export default function LogoLab() {
             viewBox was clipping the bottom-left of the left stroke. And the
             wordmark was set <strong className="text-neutral-900">bold when the
             original is light</strong>, which is why none of the four read right.
+          </p>
+          <p>
+            Since then: the sliced tops slip further left, and the lockup is
+            proportioned off the file rather than by eye. Measured there, the mark
+            is 142 tall against a 90 tall text block, so it runs{" "}
+            <strong className="text-neutral-900">1.578 times the type</strong> and
+            overhangs it by 25 above and 27 below, with an 18 unit gap between them.
+            That is now solved for rather than approximated, which is what was
+            making the H look small beside the type.
           </p>
           <p>
             A row-by-row scan of your file gives the construction: 132&times;144
@@ -98,8 +107,9 @@ export default function LogoLab() {
         <section className="mt-14">
           <h2 className="text-xl font-semibold">1. The letter</h2>
           <p className="mt-2 text-[14px] text-neutral-500">
-            All four now have two cuts and the full uncropped extent. They differ
-            only in cut thickness and angle.
+            The piece above each cut now slips left and slightly down, as though
+            the razor carried it. They differ in how far it slips and how thin the
+            cut reads.
           </p>
 
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -160,22 +170,33 @@ export default function LogoLab() {
         <section className="mt-16 rounded-lg border border-neutral-200 p-10">
           <h2 className="text-xl font-semibold">3. In place</h2>
           <p className="mt-2 text-[14px] text-neutral-500">
-            Aldrich at navbar size and large, which is what the site preview uses
-            until you pick.
+            Michroma at navbar size and large, which is what the site preview now
+            uses. Est. 2013 is enlarged in the small lockup; see the note below.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-16">
-            <Logo size={84} variant="a" wordClass={aldrich.className} />
-            <Logo size={46} variant="a" wordClass={aldrich.className} />
+            <Logo size={84} variant="a" wordClass={michroma.className} />
+            <Logo size={46} variant="a" wordClass={michroma.className} />
             <div className="rounded bg-neutral-900 px-7 py-5">
-              <Logo size={46} variant="a" wordClass={aldrich.className} ink="#ffffff" />
+              <Logo size={46} variant="a" wordClass={michroma.className} ink="#ffffff" />
             </div>
           </div>
         </section>
 
-        <p className="mt-14 text-[13px] text-neutral-400">
-          Tell me the variant letter and the typeface, plus anything still off in
-          the cuts: thickness, angle, or where they sit relative to the crossbar.
-        </p>
+        <div className="mt-14 max-w-3xl space-y-3 text-[13px] leading-relaxed text-neutral-500">
+          <p>
+            One tension worth naming. The original was drawn at 502px wide, and at
+            those proportions Est. 2013 lands around 6px once the lockup is scaled
+            into a navbar, which is unreadable. The faithful ratio is what you see
+            in the large lockup above; the small one enlarges Est. 2013 by half
+            again so it still reads. The alternative is dropping Est. 2013 from
+            small placements entirely, which is what most marks with a founding
+            date do. Say which you prefer.
+          </p>
+          <p>
+            Otherwise: tell me the variant letter, and anything still off in the
+            slip distance, the cut thickness, or where the cuts sit.
+          </p>
+        </div>
       </div>
     </main>
   );

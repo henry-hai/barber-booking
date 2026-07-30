@@ -43,15 +43,15 @@ const BASE: IGeometry = {
   cutWidth: 3.5,
   leftCut: [29, 50],
   rightCut: [111, 30],
-  slip: [-5, 1.5]
+  slip: [-8.5, 1.5]
 };
 
 const GEOMETRY: Record<LogoVariant, IGeometry> = {
   a: BASE,
   /* Thinner cuts. */
   b: { ...BASE, cutWidth: 2.5 },
-  /* A harder slip, if the slice should read more violent. */
-  c: { ...BASE, slip: [-8, 2.5] },
+  /* A harder slip again, if the slice should read more violent. */
+  c: { ...BASE, slip: [-12, 2.5] },
   /* Heavier strokes, cuts closer to the crossbar. */
   d: { ...BASE, stroke: 32, leftCut: [29, 53], rightCut: [111, 33] }
 };
@@ -179,9 +179,23 @@ export function LogoMark({
 }
 
 /*
- * Full lockup. All three lines centre as a block, and Est. 2013 carries the
- * same top-to-bottom gradient as the mark, as the original does.
+ * Full lockup, proportioned off the original.
+ *
+ * Measured there: the mark is 142 tall against a 90 tall text block, so the H
+ * runs 1.578 times the type and overhangs it by 25 above and 27 below. The gap
+ * between the mark and the type is 18, or 0.127 of the mark's height.
+ *
+ * Everything below is expressed as a fraction of the mark's height so those
+ * ratios hold at any size. The type is small relative to the mark by design;
+ * that is what the original does, so the lockup needs to be set large enough
+ * for Est. 2013 to stay legible rather than the type being scaled up to fix it.
  */
+const TEXT_BLOCK = 1 / 1.578;   /* text block height, as a fraction of the mark */
+const LINE_HEIGHT = 1.16;
+const EST_RATIO = 0.43;         /* Est. 2013 size, as a fraction of a name line */
+const EST_GAP = 0.25;           /* space above Est., as a fraction of a name line */
+const GAP_RATIO = 0.127;        /* mark-to-type gap, as a fraction of the mark */
+
 export function Logo({
   size = 46,
   variant = "a",
@@ -193,7 +207,8 @@ export function Logo({
   accentEnd,
   wordClass = "",
   lines = ["Henry Hai", "Studio"],
-  showEst = true
+  showEst = true,
+  estScale = 1
 }: {
   size?: number;
   variant?: LogoVariant;
@@ -206,30 +221,43 @@ export function Logo({
   wordClass?: string;
   lines?: string[];
   showEst?: boolean;
+  /*
+   * Enlarges Est. 2013 beyond the faithful ratio. The original's proportions
+   * were drawn for a 502px wide mark; scaled into a navbar, Est. 2013 lands
+   * around 6px and stops being readable. Large placements should leave this at
+   * 1; small ones need roughly 1.5.
+   */
+  estScale?: number;
 }) {
   const estBottom = accent ?? CYAN_BOTTOM;
   const estTop = accentEnd ?? CYAN_TOP;
 
+  /* Solve the name line size so the whole block lands at TEXT_BLOCK of the
+     mark's height: the name lines, the gap, and Est. itself. */
+  const blockHeight = size * TEXT_BLOCK;
+  const estUnits = showEst ? EST_GAP + EST_RATIO * estScale * LINE_HEIGHT : 0;
+  const lineSize = blockHeight / (lines.length * LINE_HEIGHT + estUnits);
+
   return (
-    <div className="flex items-center" style={{ gap: size * 0.14 }}>
+    <div className="flex items-center" style={{ gap: size * GAP_RATIO }}>
       <LogoMark size={size} variant={variant} tone={tone} toneEnd={toneEnd} flat={flat} />
       <div className="flex flex-col items-center leading-none">
         {lines.map((line) => (
           <div
             key={line}
-            className={`uppercase ${wordClass}`}
-            style={{ color: ink, fontSize: size * 0.315, lineHeight: 1.16, letterSpacing: "0.015em" }}
+            className={`whitespace-nowrap uppercase ${wordClass}`}
+            style={{ color: ink, fontSize: lineSize, lineHeight: LINE_HEIGHT, letterSpacing: "0.015em" }}
           >
             {line}
           </div>
         ))}
         {showEst && (
           <div
-            className={`uppercase ${wordClass}`}
+            className={`whitespace-nowrap uppercase ${wordClass}`}
             style={{
-              fontSize: size * 0.175,
+              fontSize: lineSize * EST_RATIO * estScale,
               letterSpacing: "0.2em",
-              marginTop: size * 0.085,
+              marginTop: lineSize * EST_GAP,
               /* letter-spacing leaves a trailing gap after the last character,
                  which pushes the line left of centre. This pulls it back. */
               textIndent: "0.2em",
