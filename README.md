@@ -123,13 +123,16 @@ Open `http://localhost:8080` to view the React client (served by the backend).
 ## Project Structure
 
 ```
-barbering-booking-platform/
+barber-booking/
 ├── index.html              # Barbering site (React navbar, Tailwind CSS)
 ├── server.js               # Node.js static file server
 ├── package.json            # Webpack + TypeScript dependencies
 ├── tsconfig.json           # TypeScript compiler config
 ├── webpack.config.js       # Webpack bundler config
 ├── img/                    # Barbering portfolio photos
+├── screenshots/            # README images (static site + dashboard)
+├── automation/
+│   └── Barber_Log.json     # Exported n8n workflow (Gmail -> JS -> Sheets)
 ├── src/                    # TypeScript gallery modules
 │   ├── index.ts            # Entry point (Webpack starts here)
 │   ├── Gallery.ts          # Gallery class (implements IGallery)
@@ -139,6 +142,7 @@ barbering-booking-platform/
 ├── server/                 # Express REST API backend
 │   ├── src/
 │   │   ├── main.ts         # Express app and route definitions
+│   │   ├── Appointments.ts # Google Sheets reader (service account)
 │   │   ├── SMTP.ts         # NodeMailer email sending
 │   │   ├── IMAP.ts         # IMAP email reading
 │   │   ├── contacts.ts     # NeDB contact CRUD
@@ -154,10 +158,14 @@ barbering-booking-platform/
     │       ├── main.tsx         # React entry point
     │       ├── state.ts         # Centralized state management
     │       ├── config.ts        # Server URL config
+    │       ├── theme.ts         # Material-UI theme
+    │       ├── Appointments.ts  # Booking request API calls
     │       ├── IMAP.ts          # Mailbox API calls
     │       ├── SMTP.ts          # Send email API calls
     │       ├── Contacts.ts      # Contact API calls
     │       └── components/
+    │           ├── AppShell.tsx
+    │           ├── Dashboard.tsx
     │           ├── BaseLayout.tsx
     │           ├── Toolbar.tsx
     │           ├── MailboxList.tsx
