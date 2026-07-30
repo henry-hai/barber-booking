@@ -9,12 +9,12 @@ The customer-facing barbering site is deployed with **GitHub Pages** from a dedi
 - **Live site:** [henry-hai.github.io/barber_website/](https://henry-hai.github.io/barber_website/)
 - **Source repo:** [github.com/henry-hai/barber_website](https://github.com/henry-hai/barber_website)
 
-<img width="1906" height="1038" alt="image" src="https://github.com/user-attachments/assets/a14ca01c-350d-4986-9aa9-de0353eb6009" />
-<img width="1906" height="1018" alt="image" src="https://github.com/user-attachments/assets/fb7357ff-f874-4fe9-91ec-5e1e834706ab" />
-<img width="1906" height="1016" alt="image" src="https://github.com/user-attachments/assets/c0ebf2b8-b9c7-4806-b674-2fe09fb06028" />
-<img width="1906" height="810" alt="image" src="https://github.com/user-attachments/assets/d803bb80-3703-410a-a6ae-60e2ed08d6f2" />
-<img width="1906" height="972" alt="image" src="https://github.com/user-attachments/assets/d444d530-1ec9-45d4-bafe-53a3180213d7" />
-<img width="1906" height="1038" alt="image" src="https://github.com/user-attachments/assets/da5d6a0d-d0f0-46a2-94ba-268e4bb50163" />
+![Landing page with hero image and navigation](screenshots/01-hero.jpg)
+![Services and pricing list](screenshots/02-services.jpg)
+![Gallery carousel of haircut work](screenshots/03-gallery.jpg)
+![Locations section with Irvine and Milpitas shops](screenshots/04-locations.jpg)
+![Booking policies and appointment request form](screenshots/05-booking-form.jpg)
+![Rest of the booking form with submit and footer](screenshots/06-booking-form-footer.jpg)
 
 ## Appointments Dashboard
 
