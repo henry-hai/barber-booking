@@ -23,9 +23,11 @@
  * can be redesigned freely without touching the pipeline.
  */
 
+import { Request, RequestHandler, Response } from "express";
 import { SendMailOptions } from "nodemailer";
 import { IServerInfo } from "./ServerInfo";
 import * as SMTP from "./SMTP";
+import { RateLimiter } from "./RateLimit";
 import {
   renderClientConfirmation,
   renderOwnerNotification
@@ -288,15 +290,18 @@ export function serializeBookingBlock(payload: IBookingPayload): string {
 /* Reads a payload back out of an email body. This is the TypeScript twin of
    the n8n Code node, kept here so the round trip can be tested. */
 export function parseBookingBlock(body: string): IBookingPayload {
-  const afterStart = body.split(JSON_START)[1];
-  if (afterStart === undefined) {
+  const start = body.indexOf(JSON_START);
+  if (start === -1) {
     throw new Error(`Missing ${JSON_START} sentinel`);
   }
-  const between = afterStart.split(JSON_END)[0];
-  if (between === undefined) {
+  /* indexOf rather than split: splitting on the end sentinel returns the whole
+     remainder when it is absent, so a truncated email would parse whatever
+     happened to follow instead of failing. */
+  const end = body.indexOf(JSON_END, start);
+  if (end === -1) {
     throw new Error(`Missing ${JSON_END} sentinel`);
   }
-  return JSON.parse(between.trim());
+  return JSON.parse(body.slice(start + JSON_START.length, end).trim());
 }
 
 /* Minimal mailer surface, so tests can record messages instead of sending. */
@@ -347,4 +352,84 @@ export class Worker {
     return payload;
   }
 
+}
+
+/* Tuning for the endpoint's rate limits, so tests can raise them. */
+export interface IBookingHandlerOptions {
+  /* Requests allowed per IP per window. */
+  perClientLimit?: number;
+  /* Requests allowed across all callers per window, as a flood backstop. */
+  globalLimit?: number;
+  windowMs?: number;
+  /* Injected in tests to record messages instead of sending them. */
+  mailer?: IMailer;
+}
+
+/*
+ * Builds the POST /booking handler.
+ *
+ * A factory rather than a bare handler so the rate limiter state and the mailer
+ * are per-instance: tests get their own counters and a recording mailer without
+ * any test-only branch running in production.
+ */
+export function createBookingHandler(
+  inServerInfo: IServerInfo,
+  options: IBookingHandlerOptions = {}
+): RequestHandler {
+
+  const windowMs = options.windowMs ?? 10 * 60 * 1000;
+  /* Five per IP per ten minutes leaves room for a client fixing a typo and
+     resubmitting; the global cap stops a distributed flood draining the Gmail
+     send quota. */
+  const perClient = new RateLimiter(options.perClientLimit ?? 5, windowMs);
+  const overall = new RateLimiter(options.globalLimit ?? 60, windowMs);
+
+  return async (inRequest: Request, inResponse: Response): Promise<void> => {
+    const body: IBookingRequestBody = inRequest.body ?? {};
+
+    /* Honeypot: the form renders a `website` field hidden from people, so
+       anything in it means a bot. Answer 200 so there is nothing to tune
+       against, and send nothing. */
+    if (isHoneypotTripped(body)) {
+      inResponse.json({ ok: true });
+      return;
+    }
+
+    const clientResult = perClient.check(inRequest.ip ?? "unknown");
+    const overallResult = overall.check("global");
+
+    if (!clientResult.allowed || !overallResult.allowed) {
+      const retryAfter = !clientResult.allowed
+        ? clientResult.retryAfterSeconds
+        : overallResult.retryAfterSeconds;
+      inResponse.set("Retry-After", String(retryAfter));
+      inResponse.status(429).json({
+        ok: false,
+        message: "Too many booking requests. Please try again shortly."
+      });
+      return;
+    }
+
+    const validation = validateBooking(body);
+    if (validation.booking === undefined) {
+      inResponse.status(400).json({
+        ok: false,
+        message: "Some of the details need fixing.",
+        errors: validation.errors
+      });
+      return;
+    }
+
+    try {
+      const worker = new Worker(inServerInfo, options.mailer);
+      await worker.submit(validation.booking);
+      inResponse.json({ ok: true });
+    } catch (inError) {
+      console.error("POST /booking error:", inError);
+      inResponse.status(502).json({
+        ok: false,
+        message: "Your request could not be sent. Please try again in a moment."
+      });
+    }
+  };
 }

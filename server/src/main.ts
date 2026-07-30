@@ -13,8 +13,7 @@ import * as SMTP from "./SMTP";                                       // SMTP Wo
 import * as Contacts from "./contacts";                               // Contacts Worker
 import { IContact } from "./contacts";                                // IContact type used in endpoint handlers
 import * as Appointments from "./Appointments";                       // Appointments Worker (Google Sheets)
-import * as Booking from "./Booking";                                 // Booking Worker (validation + the two emails)
-import { RateLimiter } from "./RateLimit";                            // in-memory cap for the public booking endpoint
+import * as Booking from "./Booking";                                 // Booking handler (validation, rate limits, the two emails)
 
 const app: Express = express();                                       // creates the Express application instance
 
@@ -112,65 +111,13 @@ app.post("/messages", async (inRequest: Request, inResponse: Response) => {
   }
 });
 
-/* Booking rate limits. Five requests per IP per ten minutes covers a client
-   correcting a mistake and resubmitting; the global cap is a backstop against a
-   distributed flood emptying the Gmail send quota. */
-const bookingLimiter = new RateLimiter(5, 10 * 60 * 1000);
-const globalBookingLimiter = new RateLimiter(60, 10 * 60 * 1000);
-
 /* POST /booking
    Public endpoint behind the appointment form on the marketing site. Validates
-   every field, then sends the owner notification (which the n8n Barber Log
-   workflow parses into the Google Sheet) and a confirmation to the client. */
-app.post("/booking", async (inRequest: Request, inResponse: Response) => {
-  const body: Booking.IBookingRequestBody = inRequest.body ?? {};
-
-  /* Honeypot: the form renders a `website` field that is hidden from people, so
-     anything in it means a bot. Answer 200 so the bot has nothing to tune
-     against, and send nothing. */
-  if (Booking.isHoneypotTripped(body)) {
-    inResponse.json({ ok: true });
-    return;
-  }
-
-  const clientKey = inRequest.ip ?? "unknown";
-  const perClient = bookingLimiter.check(clientKey);
-  const overall = globalBookingLimiter.check("global");
-
-  if (!perClient.allowed || !overall.allowed) {
-    const retryAfter = !perClient.allowed
-      ? perClient.retryAfterSeconds
-      : overall.retryAfterSeconds;
-    inResponse.set("Retry-After", String(retryAfter));
-    inResponse.status(429).json({
-      ok: false,
-      message: "Too many booking requests. Please try again shortly."
-    });
-    return;
-  }
-
-  const validation = Booking.validateBooking(body);
-  if (validation.booking === undefined) {
-    inResponse.status(400).json({
-      ok: false,
-      message: "Some of the details need fixing.",
-      errors: validation.errors
-    });
-    return;
-  }
-
-  try {
-    const bookingWorker = new Booking.Worker(serverInfo);
-    await bookingWorker.submit(validation.booking);
-    inResponse.json({ ok: true });
-  } catch (inError) {
-    console.error("POST /booking error:", inError);
-    inResponse.status(502).json({
-      ok: false,
-      message: "Your request could not be sent. Please try again in a moment."
-    });
-  }
-});
+   every field, rate limits by IP, then sends the owner notification (which the
+   n8n Barber Log workflow parses into the Google Sheet) and a confirmation to
+   the client. The handler is built in Booking.ts so the end-to-end tests can
+   mount the same one with a recording mailer. */
+app.post("/booking", Booking.createBookingHandler(serverInfo));
 
 /* GET /appointments
    Returns a JSON array of booking requests from the Google Sheet that the
