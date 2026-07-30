@@ -1,20 +1,18 @@
 {
-  "name": "m5",
+  "name": "barber-booking",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
-  "keywords": [],
-  "author": "",
+  "private": true,
+  "description": "Full-stack barbering booking platform: Next.js marketing site, Express API, and React appointments dashboard",
   "license": "ISC",
-  "type": "commonjs",
-  "devDependencies": {
-    "ts-loader": "^9.5.4",
-    "typescript": "^5.9.3",
-    "webpack": "^5.105.4",
-    "webpack-cli": "^6.0.1"
+  "author": "Henry Hai Nguyen",
+  "scripts": {
+    "dev": "npm run dev --prefix web",
+    "build": "npm run build --prefix web",
+    "build:server": "npm run build --prefix server",
+    "build:client": "npm run build --prefix client",
+    "start:server": "npm start --prefix server",
+    "test": "npm test --prefix web && npm test --prefix server",
+    "test:e2e": "npm run test:e2e --prefix web",
+    "typecheck": "npm run typecheck --prefix web"
   }
 }

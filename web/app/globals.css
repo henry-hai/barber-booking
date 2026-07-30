@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * The old site loaded Tailwind 2 from a CDN, which shipped Preflight in the
+ * same file. Tailwind 3's Preflight is included by @tailwind base above, so
+ * there is nothing else to carry over.
+ *
+ * One addition: Preflight removes the default checkbox appearance, and the
+ * booking form's `form-checkbox` class came from Tailwind 2's CDN build. This
+ * restores it without pulling in the whole forms plugin for a single input.
+ */
+.form-checkbox {
+  appearance: auto;
+  width: 1rem;
+  height: 1rem;
+}
