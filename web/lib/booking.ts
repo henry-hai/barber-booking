@@ -8,6 +8,7 @@
 
 export interface IBookingForm {
   name: string;
+  email: string;
   phone: string;
   date1: string;
   availability1: string;
@@ -17,10 +18,14 @@ export interface IBookingForm {
   availability3: string;
   description: string;
   policiesAccepted: boolean;
+  /* Honeypot. Hidden from real users, so anything here came from a bot. The
+     server answers 200 and silently drops the request when it is filled. */
+  website: string;
 }
 
 export const emptyBookingForm: IBookingForm = {
   name: "",
+  email: "",
   phone: "",
   date1: "",
   availability1: "",
@@ -29,12 +34,14 @@ export const emptyBookingForm: IBookingForm = {
   date3: "",
   availability3: "",
   description: "",
-  policiesAccepted: false
+  policiesAccepted: false,
+  website: ""
 };
 
 /* Field-level limits, kept in sync with the server's own limits. */
 export const limits = {
   name: 100,
+  email: 254,
   phone: 32,
   availability: 500,
   description: 2000
@@ -50,9 +57,14 @@ export const countDigits = (value: string): number =>
 /* Dates arrive from <input type="date"> as YYYY-MM-DD. */
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
+/* Matches the server's check: one @, something either side, a dot in the
+   domain, no whitespace. Anything stricter rejects valid addresses. */
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function validateBookingForm(form: IBookingForm): BookingErrors {
   const errors: BookingErrors = {};
   const name = form.name.trim();
+  const email = form.email.trim();
   const phone = form.phone.trim();
   const description = form.description.trim();
 
@@ -60,6 +72,12 @@ export function validateBookingForm(form: IBookingForm): BookingErrors {
     errors.name = "Please enter your name.";
   } else if (name.length > limits.name) {
     errors.name = `Please keep your name under ${limits.name} characters.`;
+  }
+
+  if (!email) {
+    errors.email = "Please enter an email address so I can send your confirmation.";
+  } else if (email.length > limits.email || !EMAIL.test(email)) {
+    errors.email = "Please enter a valid email address.";
   }
 
   if (!phone) {
