@@ -13,7 +13,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Michroma } from "next/font/google";
-import { Logo } from "./_shared/Logo";
+import { Logo, EST_COLOR_OPTIONS, type EstColor } from "./_shared/Logo";
 import { Gallery } from "./_shared/Gallery";
 import {
   BookingForm, Locations, MobileMenu, Reveal, SectionIndex, ServicesMenu
@@ -33,7 +33,9 @@ const SECTIONS: Array<[string, string]> = [
 
 export default function SitePreview() {
   const [heroId, setHeroId] = useState(heroOptions[0].id);
-  const [fit, setFit] = useState<HeroFit>("shift");
+  const [fit, setFit] = useState<HeroFit>("high");
+  const [estColor, setEstColor] = useState<EstColor>("gradient");
+  const [estBig, setEstBig] = useState(true);
   const heroOption = heroOptions.find((option) => option.id === heroId) ?? heroOptions[0];
   const fitOption = heroFits.find((option) => option.id === fit) ?? heroFits[0];
   /* KSG 1 cannot be both hero and services photo. */
@@ -88,6 +90,33 @@ export default function SitePreview() {
           ))}
         </div>
 
+        <div className="mx-auto mt-1.5 flex max-w-[1400px] flex-wrap items-center gap-1">
+          <span className="mr-2 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
+            Est. 2013
+          </span>
+          {EST_COLOR_OPTIONS.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => setEstColor(option.id)}
+              className={`rounded px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors ${
+                option.id === estColor ? "bg-white text-neutral-900" : "text-neutral-400 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setEstBig((value) => !value)}
+            className={`ml-3 rounded px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors ${
+              estBig ? "bg-white text-neutral-900" : "text-neutral-400 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            {estBig ? "Enlarged" : "Faithful size"}
+          </button>
+        </div>
+
         <p className="mx-auto mt-1.5 max-w-[1400px] text-[11px] leading-relaxed text-neutral-500">
           {heroOption.note} <span className="text-neutral-400">{fitOption.note}</span>
         </p>
@@ -96,7 +125,7 @@ export default function SitePreview() {
       {/* nav */}
       <header className="sticky top-[92px] z-50 border-b border-neutral-900/10 bg-[#f5f2ee]/92 backdrop-blur">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4">
-          <Logo size={54} variant="a" wordClass={michroma.className} estScale={1.5} />
+          <Logo size={54} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} />
           <nav className="hidden items-center gap-9 md:flex">
             {nav.map((item) => (
               <a
@@ -141,20 +170,30 @@ export default function SitePreview() {
             </div>
           </>
         ) : (
-          <Image
-            key={heroOption.src}
-            src={heroOption.src}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            /* Blur is set per breakpoint. A fixed pixel radius reads far
-               stronger on a narrow viewport, which is why the phone looked
-               blurrier than the desktop at the same value. */
-            className={`object-cover ${heroOption.focusMobile} ${
-              fit === "top" ? heroOption.focusDesktopTop : heroOption.focusDesktopShift
-            } ${heroOption.blur ? "scale-105 blur-[2px] md:blur-[4px]" : ""}`}
-          />
+          <>
+            {/*
+              Two elements rather than one, because object-position has to
+              differ per breakpoint and inline style cannot carry a media
+              query. The phone element is the one that was already right, so it
+              keeps its own value untouched.
+
+              Blur is also per breakpoint: a fixed pixel radius reads far
+              stronger on a narrow viewport, which is why the phone genuinely
+              looked blurrier than the desktop at the same value.
+            */}
+            <Image
+              key={`${heroOption.src}-m`}
+              src={heroOption.src} alt="" fill priority sizes="100vw"
+              style={{ objectPosition: heroOption.focusMobile }}
+              className={`object-cover md:hidden ${heroOption.blur ? "scale-105 blur-[2px]" : ""}`}
+            />
+            <Image
+              key={`${heroOption.src}-d-${fit}`}
+              src={heroOption.src} alt="" fill priority sizes="100vw"
+              style={{ objectPosition: fit === "high" ? heroOption.focusHigh : heroOption.focusLow }}
+              className={`hidden object-cover md:block ${heroOption.blur ? "scale-105 blur-[4px]" : ""}`}
+            />
+          </>
         )}
         <div className="absolute inset-0" style={{ backgroundColor: `rgba(15,15,17,${heroOption.scrim})` }} />
         <div className="absolute inset-0 flex items-center">
@@ -276,7 +315,7 @@ export default function SitePreview() {
 
       <footer className="border-t border-neutral-900/10">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-6 px-6 py-12">
-          <Logo size={46} variant="a" wordClass={michroma.className} estScale={1.5} />
+          <Logo size={46} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} />
           {/* Always the current year, not the founding year. */}
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
             &copy; {new Date().getFullYear()} {shop.name}

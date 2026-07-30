@@ -45,14 +45,20 @@ export interface IHeroOption {
   src: string;
   label: string;
   note: string;
-  /* Tailwind object-position classes. These are 4:5 portraits being cropped
-     into a banner, and a phone's tall viewport keeps far more of the frame than
-     a desktop's wide one, so the two need different crops to show the same
-     part of the photograph. */
+  /*
+   * object-position values, applied as inline style rather than as Tailwind
+   * classes. `object-[34%_14%]` is an ambiguous arbitrary value: Tailwind
+   * cannot tell whether it means object-fit or object-position, so it silently
+   * generates nothing and the crop never moves.
+   *
+   * These are 4:5 portraits going into a wide banner, and a phone's tall
+   * viewport keeps far more of the frame than a desktop's, so the two need
+   * different values to show the same part of the photograph.
+   */
   focusMobile: string;
   /* Desktop crops, one per fit mode. See heroFits. */
-  focusDesktopShift: string;
-  focusDesktopTop: string;
+  focusHigh: string;
+  focusLow: string;
   scrim: number;
   blur: boolean;
 }
@@ -69,8 +75,8 @@ export interface IHeroOption {
  * part of the composition is lost.
  */
 export const heroFits = [
-  { id: "shift", label: "Shifted", note: "Cropped, pulled left so the signature on the right edge stays out of frame, and raised so the top of the head reads." },
-  { id: "top", label: "Top edge", note: "Cropped hard to the very top of the frame, matching what the phone shows." },
+  { id: "high", label: "High", note: "Pulled as high as the frame allows and shifted right, so the whole top of the head sits in view and the signature stays off the edge." },
+  { id: "low", label: "Low", note: "Shifted right and dropped, leaving space above the head. Closest to how the phone reads." },
   { id: "full", label: "Full frame", note: "The whole 4:5 photograph, uncropped, with the sides filled by a blurred copy of itself. No pixels invented." }
 ] as const;
 
@@ -93,9 +99,9 @@ export const heroOptions: IHeroOption[] = [
     src: "/img/10_Adrian_3.JPG",
     label: "Adrian 3",
     note: "Back of the head, blue braids. The blue already agrees with the cyan. The phone crop is untouched.",
-    focusMobile: "object-[50%_34%]",
-    focusDesktopShift: "md:object-[34%_14%]",
-    focusDesktopTop: "md:object-[34%_0%]",
+    focusMobile: "50% 34%",
+    focusHigh: "62% 0%",
+    focusLow: "62% 30%",
     scrim: 0.5,
     blur: true
   },
@@ -104,9 +110,9 @@ export const heroOptions: IHeroOption[] = [
     src: "/img/20_Cam_2.jpg",
     label: "Cam 2",
     note: "The most composed of the set. Reads luxury rather than edge.",
-    focusMobile: "object-[50%_38%]",
-    focusDesktopShift: "md:object-[42%_18%]",
-    focusDesktopTop: "md:object-[42%_0%]",
+    focusMobile: "50% 38%",
+    focusHigh: "58% 0%",
+    focusLow: "58% 28%",
     scrim: 0.42,
     blur: false
   },
@@ -115,9 +121,9 @@ export const heroOptions: IHeroOption[] = [
     src: "/img/26_Hoang_1.jpg",
     label: "Hoang 1",
     note: "Harder and more street. Furthest from quiet luxury.",
-    focusMobile: "object-[50%_40%]",
-    focusDesktopShift: "md:object-[42%_20%]",
-    focusDesktopTop: "md:object-[42%_0%]",
+    focusMobile: "50% 40%",
+    focusHigh: "58% 0%",
+    focusLow: "58% 30%",
     scrim: 0.42,
     blur: false
   },
@@ -126,9 +132,9 @@ export const heroOptions: IHeroOption[] = [
     src: "/img/4_KSG_1.JPG",
     label: "KSG 1",
     note: "Simple and clean. Promoting this to hero moves Murthi 1 into the services slot.",
-    focusMobile: "object-[50%_32%]",
-    focusDesktopShift: "md:object-[42%_16%]",
-    focusDesktopTop: "md:object-[42%_0%]",
+    focusMobile: "50% 32%",
+    focusHigh: "58% 0%",
+    focusLow: "58% 26%",
     scrim: 0.48,
     blur: false
   }
