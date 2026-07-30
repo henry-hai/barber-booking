@@ -241,7 +241,8 @@ export function Logo({
   lines = ["Henry Hai", "Studio"],
   showEst = true,
   estScale = 1,
-  estColor = "gradient"
+  estColor = "gradient",
+  estMin = 0
 }: {
   size?: number;
   variant?: LogoVariant;
@@ -262,6 +263,16 @@ export function Logo({
    */
   estScale?: number;
   estColor?: EstColor;
+  /*
+   * Floor for the Est. 2013 size, in pixels.
+   *
+   * The faithful ratio puts this line near 7px in a navbar, and a gradient
+   * cannot exist at 7px: the glyphs are about 5px tall and sit in the middle of
+   * the line box, so they sample only a sliver of the ramp and render as a flat
+   * mid-tone. Any direction read off that is antialiasing, not gradient. Small
+   * placements need a floor.
+   */
+  estMin?: number;
 }) {
   const scheme = EST_COLORS[estColor];
   /* `from` is always the top stop and `to` always the base. Fixed, not
@@ -293,7 +304,10 @@ export function Logo({
           <div
             className={`whitespace-nowrap uppercase ${wordClass}`}
             style={{
-              fontSize: lineSize * EST_RATIO * estScale,
+              fontSize: Math.max(lineSize * EST_RATIO * estScale, estMin),
+              /* Hugs the glyphs, so the gradient box is the type rather than
+                 the line box. Without this the ramp is mostly leading. */
+              lineHeight: 1,
               letterSpacing: "0.2em",
               marginTop: lineSize * EST_GAP,
               /* letter-spacing leaves a trailing gap after the last character,
