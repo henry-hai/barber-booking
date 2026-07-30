@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -46,9 +45,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
+    /* The navbar and its top offset belong to the marketing page, not to every
+       route, so that other routes can present their own chrome. */
     <html lang="en">
-      <body className="bg-gray-100 font-sans leading-relaxed text-gray-800 pt-16">
-        <Navbar />
+      <body className="bg-gray-100 font-sans leading-relaxed text-gray-800">
         {children}
       </body>
     </html>

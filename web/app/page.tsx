@@ -4,6 +4,7 @@
  */
 
 import Image from "next/image";
+import Navbar from "@/components/Navbar";
 import Gallery from "@/components/Gallery";
 import BookingForm from "@/components/BookingForm";
 import Footer from "@/components/Footer";
@@ -44,6 +45,10 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
       />
+
+      <Navbar />
+      {/* Clears the fixed navbar. */}
+      <div className="pt-16" />
 
       {/* Hero */}
       <section id="hero" className="relative h-screen">
