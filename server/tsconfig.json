@@ -6,7 +6,12 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "commonjs",
+    // node16 pairs with the package's "type": "commonjs", so the emit is the
+    // same CommonJS as before. The resolver is what changed: the MCP SDK
+    // publishes its entry points through an "exports" map, and the older
+    // "node" resolution cannot see subpaths like server/mcp.js.
+    "module": "node16",
+    "moduleResolution": "node16",
     "target": "ES2020",
     // For nodejs:
     // "lib": ["esnext"],

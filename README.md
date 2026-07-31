@@ -76,6 +76,49 @@ Two consequences worth knowing:
 
 The Gmail trigger filters on the subject prefix `Appointment Request from`, so that must stay too.
 
+## MCP server
+
+The booking system is also exposed over the [Model Context Protocol](https://modelcontextprotocol.io), so an MCP client can read the booking sheet and make a booking as a tool call.
+
+**This is a local run mode.** It speaks MCP over stdio and is launched as a child process by whatever client connects to it. It is not deployed, not hosted, and listens on no port.
+
+| Tool | What it does |
+|---|---|
+| `check_availability` | Lists the dates clients have already requested, with a count and the availability notes for each. Optional `from` and `to` bounds, `YYYY-MM-DD`. Reads the same Google Sheet the dashboard reads. |
+| `request_booking` | Submits an appointment request. Takes the same fields as the website form, including `policiesAccepted`. |
+
+A booking made through `request_booking` **travels the identical path as one made on the website**. It runs the same `validateBooking`, the same honeypot check and the same rate limiter, then the same `Booking.Worker`, which sends the same two emails. The owner notification carries the same sentinel-wrapped A..K JSON, so n8n appends the row without knowing or caring where the request came from. `server/src/mcp/BookingTools.ts` calls that existing code rather than restating any of it.
+
+Read `check_availability` for what it is: the sheet holds *requests*, not a confirmed calendar. A date listed there has been asked for, which is not the same as being taken, and a date missing from it is not a guarantee that it is free.
+
+Running costs effectively nothing and it is safe to leave running. It touches only the Google Sheets API on a read-only service account and the Gmail account the site already sends through. No model is called and no paid API is involved.
+
+### Connecting a client
+
+Build first, then point a client at the compiled entry point:
+
+```bash
+cd server
+npm install
+npm run build
+npm run mcp        # or: node dist/mcp/main.js
+```
+
+For Claude Code, `claude mcp add booking -- node C:/dev/barber-booking/server/dist/mcp/main.js`. For any client that takes JSON config:
+
+```json
+{
+  "mcpServers": {
+    "booking": {
+      "command": "node",
+      "args": ["/absolute/path/to/barber-booking/server/dist/mcp/main.js"]
+    }
+  }
+}
+```
+
+Credentials come from `server/serverInfo.json` and `server/serviceAccount.json`, or from the same environment variables the deployed server uses. `check_availability` needs the sheets block and the service account; `request_booking` needs the SMTP block.
+
 ## Tech Stack
 
 | Technology | Usage |
