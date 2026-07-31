@@ -97,6 +97,8 @@ export default function SitePreview() {
   const [estColor, setEstColor] = useState<EstColor>("deep");
   const [estBig, setEstBig] = useState(true);
   const [heroType, setHeroType] = useState<HeroType>("white");
+  /* Collapses the preview toolbar so the page can be judged on its own. */
+  const [chrome, setChrome] = useState(true);
   const heroOption = heroOptions.find((option) => option.id === heroId) ?? heroOptions[0];
   const fitOption = heroFits.find((option) => option.id === fit) ?? heroFits[0];
   /* KSG 1 cannot be both hero and services photo. */
@@ -109,7 +111,17 @@ export default function SitePreview() {
     <div className="bg-[#f5f2ee] text-neutral-900">
 
       {/* preview chrome */}
-      <div className="sticky top-0 z-[100] border-b border-white/10 bg-neutral-950 px-5 py-2">
+      {!chrome && (
+        <button
+          type="button"
+          onClick={() => setChrome(true)}
+          className="fixed bottom-5 left-5 z-[150] rounded-full bg-neutral-950/85 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-300 backdrop-blur transition-colors hover:text-white"
+        >
+          Show controls
+        </button>
+      )}
+
+      <div className={`sticky top-0 z-[100] border-b border-white/10 bg-neutral-950 px-5 py-2 ${chrome ? "" : "hidden"}`}>
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-5 gap-y-2">
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
             Preview
@@ -117,6 +129,13 @@ export default function SitePreview() {
           <Link href="/preview/logo" className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#7de3ff] hover:text-white">
             Logo lab
           </Link>
+          <button
+            type="button"
+            onClick={() => setChrome(false)}
+            className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-400 hover:text-white"
+          >
+            Hide controls
+          </button>
           <span className="ml-auto flex flex-wrap items-center gap-1">
             <span className="mr-2 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
               Hero
@@ -205,7 +224,7 @@ export default function SitePreview() {
       </div>
 
       {/* nav */}
-      <header className="sticky top-[92px] z-50 border-b border-neutral-900/10 bg-[#f5f2ee]/92 backdrop-blur">
+      <header className={`sticky z-50 border-b border-neutral-900/10 bg-[#f5f2ee]/92 backdrop-blur ${chrome ? "top-[92px]" : "top-0"}`}>
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4">
           <Logo size={54} variant="e" wordClass={michroma.className} estScale={estBig ? 1.6 : 1} estColor={estColor} estMin={estBig ? 8 : 0} />
           <nav className="hidden items-center gap-9 md:flex">
