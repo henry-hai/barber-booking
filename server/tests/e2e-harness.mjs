@@ -1,0 +1,81 @@
+/*
+ * Booking API for the end-to-end tests.
+ *
+ * Mounts the real POST /booking handler from src/Booking.ts -- the same
+ * validation, honeypot and rate limiting production runs -- with a mailer that
+ * records messages instead of sending them. Nothing here needs credentials or
+ * network access, so CI can run it with no secrets.
+ *
+ * Extra routes, test-only, for asserting on what was "sent":
+ *   GET    /__outbox  the recorded messages
+ *   DELETE /__outbox  clears them between tests
+ */
+
+import { createRequire } from "node:module";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const serverRoot = path.join(here, "..");
+/* Anchored inside server/ so express resolves from server/node_modules however
+   this file is invoked. Paths to the compiled sources stay absolute. */
+const require = createRequire(path.join(serverRoot, "package.json"));
+
+const express = require("express");
+const Booking = require(path.join(serverRoot, "dist/Booking.js"));
+
+const PORT = Number(process.env.PORT ?? 8181);
+
+/* Stands in for the gitignored serverInfo.json. The address is only used as
+   the From and as the owner's recipient; nothing connects to Gmail. */
+const serverInfo = {
+  smtp: {
+    host: "smtp.invalid",
+    port: 465,
+    auth: { user: "owner@example.com", pass: "not-a-real-password" }
+  },
+  imap: {
+    host: "imap.invalid",
+    port: 993,
+    auth: { user: "owner@example.com", pass: "not-a-real-password" }
+  }
+};
+
+const outbox = [];
+
+const recordingMailer = {
+  async sendMessage(options) {
+    outbox.push(options);
+    return "";
+  }
+};
+
+const app = express();
+app.use(express.json({ limit: "64kb" }));
+
+app.use((request, response, next) => {
+  response.header("Access-Control-Allow-Origin", "*");
+  response.header("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
+  response.header("Access-Control-Allow-Headers", "Origin,X-Requested-With,Content-Type,Accept");
+  if (request.method === "OPTIONS") { response.sendStatus(204); return; }
+  next();
+});
+
+app.post("/booking", Booking.createBookingHandler(serverInfo, {
+  mailer: recordingMailer,
+  /* Raised so an ordinary test run does not trip the limit; the rate limiter
+     itself is covered by tests/ratelimit.test.ts. */
+  perClientLimit: 100,
+  globalLimit: 1000
+}));
+
+app.get("/__outbox", (_request, response) => { response.json(outbox); });
+
+app.delete("/__outbox", (_request, response) => {
+  outbox.length = 0;
+  response.json({ ok: true });
+});
+
+app.listen(PORT, () => {
+  console.log(`Booking test harness listening on ${PORT}`);
+});
