@@ -1,16 +1,29 @@
 /*
- * The barbering site, statically generated. Every section below is a server
- * component; only the navbar, the gallery and the booking form ship JavaScript.
+ * Henry Hai Studio, statically generated.
+ *
+ * Everything here is a server component except the hero's reveals, the gallery,
+ * the section index, the mobile menu and the booking form, which are the only
+ * parts that need to run in the browser.
+ *
+ * Structure is the design: numbered sections down a fixed left index, hairline
+ * rules instead of cards, and a great deal of space. The index is hidden below
+ * the large breakpoint, where the top bar takes over.
  */
 
 import Image from "next/image";
-import Navbar from "@/components/Navbar";
-import Gallery from "@/components/Gallery";
+import Hero from "@/components/Hero";
+import Reveal from "@/components/Reveal";
+import { Logo } from "@/components/Logo";
+import GalleryTabs from "@/components/GalleryTabs";
+import ServicesMenu from "@/components/ServicesMenu";
+import SectionIndex from "@/components/SectionIndex";
+import MobileMenu from "@/components/MobileMenu";
+import LocationsList from "@/components/Locations";
 import BookingForm from "@/components/BookingForm";
-import Footer from "@/components/Footer";
-import { bookingPolicies, locations, services, site } from "@/lib/site";
+import { SERIF } from "@/lib/fonts";
+import { locations, navLinks, services, site } from "@/lib/site";
 
-/* LocalBusiness markup so the shop's name, locations and services are legible
+/* LocalBusiness markup, so the shop's name, locations and services are legible
    to search engines without them having to infer any of it from the copy. */
 const localBusinessJsonLd = {
   "@context": "https://schema.org",
@@ -24,7 +37,7 @@ const localBusinessJsonLd = {
   sameAs: [site.instagram],
   location: locations.map((location) => ({
     "@type": "Place",
-    name: `${site.name} -- ${location.name}`,
+    name: `${site.name}, ${location.name}`,
     address: { "@type": "PostalAddress", streetAddress: location.address, addressCountry: "US" }
   })),
   hasOfferCatalog: {
@@ -38,140 +51,177 @@ const localBusinessJsonLd = {
   }
 };
 
+const SECTIONS = [
+  ["about", "About"], ["services", "Services"],
+  ["gallery", "Gallery"], ["locations", "Locations"], ["book", "Book"]
+] as const;
+
 export default function Home() {
   return (
-    <>
+    <div className="bg-[#f5f2ee] text-neutral-900">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
       />
 
-      <Navbar />
-      {/* Clears the fixed navbar. */}
-      <div className="pt-16" />
+      <header className="sticky top-0 z-50 border-b border-neutral-900/10 bg-[#f5f2ee]/92 backdrop-blur">
+        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4">
+          <a href="#" aria-label={site.name}>
+            <Logo size={54} />
+          </a>
 
-      {/* Hero */}
-      <section id="hero" className="relative h-screen">
-        <Image
-          src="/img/barbershop-interior.jpg"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <h1 className="text-white text-4xl font-bold">Welcome!</h1>
+          <nav className="hidden items-center gap-9 md:flex">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={`#s-${link.label.toLowerCase()}`}
+                className="font-mono text-[13px] uppercase tracking-[0.14em] text-neutral-700 transition-colors hover:text-neutral-900"
+              >
+                {link.label}
+              </a>
+            ))}
+            <a
+              href="#s-book"
+              className="group relative overflow-hidden bg-neutral-900 px-7 py-3 font-mono text-[12px] uppercase tracking-[0.16em] text-white"
+            >
+              <span className="relative z-10">Book</span>
+              <span className="absolute inset-0 -translate-x-full bg-[#0be6f9] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0" />
+            </a>
+          </nav>
+
+          <MobileMenu />
         </div>
-      </section>
+      </header>
 
-      {/* About */}
-      <section id="about" className="py-16 bg-gray-100">
-        <div className="container mx-auto flex flex-col md:flex-row items-center justify-center px-6 text-center md:text-left">
-          <Image
-            src="/img/henry-portrait.jpg"
-            alt="Henry Hai in the shop"
-            width={600}
-            height={800}
-            sizes="(min-width: 768px) 25vw, 75vw"
-            className="w-3/4 sm:w-2/3 md:w-1/4 h-auto rounded-lg shadow-lg mb-8 md:mb-0"
-          />
-          <div className="md:ml-8">
-            <h2 className="text-3xl font-bold mb-4">About</h2>
-            <p className="text-gray-700">
-              Hi, I&rsquo;m Henry!<br />
-              I started this barbershop back in {site.foundedYear} &amp; have been<br />
-              dedicated to creating personalized, luxury haircut experiences ever since.
-            </p>
-          </div>
-        </div>
-      </section>
+      <Hero />
 
-      {/* Services */}
-      <section id="services" className="py-16 bg-white">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row md:justify-between items-center">
-          <div className="md:w-2/3 bg-white shadow-md p-8">
-            <h2 className="text-3xl font-bold text-center mb-8">Services</h2>
-            <ul className="space-y-4 text-lg">
-              {services.map((service) => (
-                <li key={service.name} className="flex justify-between items-center">
-                  <span>{service.name}</span>
-                  <span>{service.price}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-4 text-gray-500 text-sm">
-              * Add-On Prices are denoted with &lsquo;+&rsquo; &amp; can only be added to
-              Haircuts, Line-Up Services are A LA CARTE ONLY (Haircut Services incl.
-              Line-Ups) *
-            </p>
-          </div>
+      <div className="mx-auto max-w-[1400px] px-6">
+        <div className="flex gap-16">
+          <aside className="hidden w-40 shrink-0 lg:block">
+            <div className="sticky top-[120px] py-24">
+              <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-neutral-400">
+                Index
+              </p>
+              <div className="mt-5">
+                <SectionIndex sections={SECTIONS} />
+              </div>
+            </div>
+          </aside>
 
-          <div className="hidden md:block md:mt-0 md:w-1/3 md:ml-8">
-            <Image
-              src="/img/ksg-01.jpg"
-              alt="Mid fade with a scissor-cut top"
-              width={600}
-              height={800}
-              sizes="33vw"
-              className="w-full h-auto rounded-lg shadow-lg object-cover"
-            />
-          </div>
-        </div>
-      </section>
+          <main className="min-w-0 flex-1">
+            {/* No prose and no portrait. The record says more with less, which
+                is the point of the section. */}
+            <Section id="about" number="01" title="About">
+              <Reveal>
+                <dl className="max-w-xl">
+                  {[
+                    ["Cutting since", String(site.foundedYear)],
+                    ["Locations", "Milpitas & Irvine"],
+                    ["Photography", "In-house"]
+                  ].map(([key, value]) => (
+                    <div key={key} className="flex items-baseline gap-8 border-b border-neutral-300 py-4 first:border-t">
+                      <dt className="w-40 shrink-0 font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
+                        {key}
+                      </dt>
+                      <dd className="text-[17px] text-neutral-900" style={{ fontFamily: SERIF }}>
+                        {value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </Reveal>
+            </Section>
 
-      <Gallery />
-
-      {/* Locations */}
-      <section id="locations" className="py-16 bg-gray-100">
-        <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center mb-8">Locations</h2>
-          <div className="flex flex-wrap -mx-4">
-            {locations.map((location) => (
-              <div key={location.id} className="md:w-1/2 px-4 mb-8">
-                <div className="bg-white p-6 rounded-lg shadow-lg flex items-center">
-                  <Image
-                    src={location.image}
-                    alt={location.name}
-                    width={300}
-                    height={400}
-                    sizes="(min-width: 640px) 12vw, 33vw"
-                    className="w-1/3 sm:w-1/4 h-auto rounded-lg shadow-md mr-4"
-                  />
-                  <div>
-                    <h3 className="text-xl font-bold mb-2">{location.name}</h3>
-                    <p className="text-gray-700">{location.address}</p>
-                    <p className="text-gray-700">Phone: {location.phone}</p>
-                    <h4 className="mt-4 font-bold text-lg">*Seasonal Hours*</h4>
-                    <ul className="text-gray-600">
-                      {location.hours.map((line) => <li key={line}>{line}</li>)}
-                    </ul>
-                  </div>
+            <Section id="services" number="02" title="Services">
+              <div className="grid gap-12 lg:grid-cols-12">
+                <div className="lg:col-span-4">
+                  <Reveal>
+                    <div className="relative aspect-[4/5] overflow-hidden rounded-sm">
+                      <Image
+                        src="/img/ksg-01.jpg"
+                        alt="Mid fade with a scissor-cut top"
+                        fill
+                        sizes="(min-width: 1024px) 30vw, 90vw"
+                        className="object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.04]"
+                      />
+                    </div>
+                  </Reveal>
+                  <p className="mt-4 text-[13px] leading-relaxed text-neutral-600">
+                    Hover any line for its terms.
+                  </p>
+                </div>
+                <div className="lg:col-span-8">
+                  <Reveal>
+                    <ServicesMenu />
+                  </Reveal>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+            </Section>
 
-      {/* Appointment */}
-      <section id="appointment" className="py-16 bg-gray-100">
-        <div className="container mx-auto flex flex-col md:flex-row md:space-x-8 px-6">
-          <div className="md:w-1/3 bg-white p-6 rounded-lg shadow-md mb-8 md:mb-0">
-            <h2 className="text-2xl font-bold mb-4">Booking Policies</h2>
-            <p className="text-gray-600">
-              Please read and accept my booking policies before making an appointment.
+            <Section id="gallery" number="03" title="Gallery">
+              <Reveal>
+                <GalleryTabs />
+              </Reveal>
+            </Section>
+
+            <Section id="locations" number="04" title="Locations">
+              <LocationsList />
+            </Section>
+
+            <Section id="book" number="05" title="Book" last>
+              <Reveal>
+                <p className="mb-10 max-w-xl text-[17px] leading-relaxed text-neutral-700" style={{ fontFamily: SERIF }}>
+                  Offer up to three times that suit you. I will confirm one with you soon.
+                </p>
+              </Reveal>
+              <Reveal delay={100}>
+                <BookingForm />
+              </Reveal>
+            </Section>
+          </main>
+        </div>
+      </div>
+
+      <footer className="border-t border-neutral-900/10">
+        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-6 px-6 py-12">
+          <Logo size={54} />
+          <div className="flex items-center gap-6">
+            <a
+              href={site.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+              className="text-neutral-500 transition-colors hover:text-neutral-900"
+            >
+              <svg width="18" height="18" viewBox="0 0 448 512" fill="currentColor" aria-hidden="true">
+                <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z" />
+              </svg>
+            </a>
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
+              &copy; {new Date().getFullYear()} {site.name}
             </p>
-            <ul className="list-disc list-inside text-gray-600 mt-4">
-              {bookingPolicies.map((policy) => <li key={policy}>{policy}</li>)}
-            </ul>
           </div>
-
-          <BookingForm />
         </div>
-      </section>
+      </footer>
+    </div>
+  );
+}
 
-      <Footer />
-    </>
+function Section({
+  id, number, title, children, last = false
+}: {
+  id: string; number: string; title: string; children: React.ReactNode; last?: boolean;
+}) {
+  return (
+    <section
+      id={`s-${id}`}
+      className={`scroll-mt-28 border-t border-neutral-900/15 py-20 first:border-t-0 ${last ? "pb-32" : ""}`}
+    >
+      <div className="mb-10 flex items-baseline gap-5">
+        <span className="font-mono text-[12px] tracking-[0.15em] text-neutral-400">{number}</span>
+        <h2 className="text-[30px] tracking-tight" style={{ fontFamily: SERIF }}>{title}</h2>
+      </div>
+      {children}
+    </section>
   );
 }
