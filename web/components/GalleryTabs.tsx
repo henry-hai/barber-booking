@@ -62,6 +62,7 @@ function Row({
     <div className="relative">
       <div
         ref={ref}
+        id={row.id}
         className="flex gap-4 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {row.photos.map((photo, index) => (
@@ -195,7 +196,9 @@ export default function GalleryTabs() {
             <button
               key={tab.id}
               role="tab"
+              id={`gallery-tab-${tab.id}`}
               aria-selected={selected}
+              aria-controls={`gallery-panel-${tab.id}`}
               onClick={() => setActiveId(tab.id)}
               className={`pb-1.5 font-mono text-[12px] uppercase tracking-[0.2em] transition-colors ${
                 selected
@@ -209,7 +212,12 @@ export default function GalleryTabs() {
         })}
       </div>
 
-      <div className="mt-8 space-y-4">
+      <div
+        role="tabpanel"
+        id={`gallery-panel-${active.id}`}
+        aria-labelledby={`gallery-tab-${active.id}`}
+        className="mt-8 space-y-4"
+      >
         {active.rows.map((row, index) => (
           <Row
             key={row.id}
