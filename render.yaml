@@ -1,0 +1,59 @@
+# Render blueprint for the Express API and the appointments dashboard.
+#
+# One web service covers both: Express answers the API and serves the built
+# dashboard bundle from client/dist, so they share an origin and the dashboard
+# needs no CORS and no separate host.
+#
+# NO SECRET VALUES APPEAR IN THIS FILE. Every variable below is declared with
+# sync: false, which tells Render to prompt for it in the dashboard and keep it
+# out of the repo. See the "Deployment" section of the README for what each one
+# takes.
+#
+# Free tier: the service spins down after about 15 minutes idle and the next
+# request pays roughly 40 seconds of cold start. That is fine for a dashboard
+# one person opens a few times a day.
+
+services:
+  - type: web
+    name: henryhaistudio-api
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+
+    # Both packages are built: the server for dist/boot.js, the client for the
+    # dashboard bundle Express serves. npm ci installs from the lockfiles.
+    buildCommand: >-
+      npm ci --prefix server &&
+      npm run build --prefix server &&
+      npm ci --prefix client &&
+      npm run build --prefix client
+
+    # Runs server/dist/boot.js, which materializes the credential files from
+    # the environment before the app reads them.
+    startCommand: npm start --prefix server
+
+    # Unauthenticated liveness endpoint, so the health check is not answered
+    # with the dashboard's 401.
+    healthCheckPath: /healthz
+
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+
+      # Gmail SMTP and IMAP credentials plus the sheets block: the entire
+      # contents of server/serverInfo.json as one line of JSON.
+      - key: SERVER_INFO_JSON
+        sync: false
+
+      # The GCP service account key: the entire contents of
+      # serviceAccount.json as one line of JSON. Read-only on the sheet.
+      - key: GOOGLE_SERVICE_ACCOUNT_JSON
+        sync: false
+
+      # Basic-auth credentials for the dashboard. Without both of these every
+      # private route answers 503 and nothing is exposed.
+      - key: DASHBOARD_USER
+        sync: false
+      - key: DASHBOARD_PASSWORD
+        sync: false
