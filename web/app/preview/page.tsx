@@ -33,15 +33,31 @@ const SERIF = "ui-serif, 'Iowan Old Style', 'Palatino Linotype', Georgia, serif"
  */
 type HeroType = "white" | "shadow" | "cyan" | "bone" | "ink";
 
-const HERO_TYPE: Record<HeroType, { label: string; note: string; title: string; sub: string; eyebrow: string }> = {
+interface IHeroTypeStyle {
+  label: string;
+  note: string;
+  title: string;
+  sub: string;
+  eyebrow: string;
+  /*
+   * Text shadows are applied as inline style, not Tailwind arbitrary values.
+   * `[text-shadow:0_1px_18px_rgba(0,0,0,0.35)]` emitted no CSS at all: the
+   * commas inside rgba() break the class parser, so the class was inert and
+   * this treatment rendered identically to plain white.
+   */
+  shadow?: string;
+}
+
+const HERO_TYPE: Record<HeroType, IHeroTypeStyle> = {
   white: {
-    label: "White", note: "Plain white. Cleanest, relies entirely on the scrim.",
+    label: "White", note: "Plain white, no shadow at all. Cleanest, and relies entirely on the scrim to hold the type.",
     title: "text-white", sub: "text-white/75", eyebrow: "text-white/80"
   },
   shadow: {
-    label: "White + halo", note: "White with a very soft halo rather than a drop shadow, so it holds over bright patches without casting an edge across the photograph behind it.",
-    title: "text-white [text-shadow:0_1px_18px_rgba(0,0,0,0.35)]",
-    sub: "text-white/85", eyebrow: "text-white/90"
+    label: "White + halo",
+    note: "White over a wide, very diffuse dark glow. It lifts the type off bright patches without the hard edge a drop shadow casts across the photograph.",
+    title: "text-white", sub: "text-white/85", eyebrow: "text-white/90",
+    shadow: "0 0 34px rgba(0,0,0,0.62), 0 0 12px rgba(0,0,0,0.45)"
   },
   cyan: {
     label: "Cyan eyebrow", note: "White headline with the label in brand cyan. Adds colour without tinting the name itself.",
@@ -49,8 +65,7 @@ const HERO_TYPE: Record<HeroType, { label: string; note: string; title: string; 
   },
   bone: {
     label: "Bone", note: "The site's own bone rather than pure white. Warmer, and ties the hero to the page below it.",
-    title: "text-[#f5f2ee]",
-    sub: "text-[#f5f2ee]/75", eyebrow: "text-[#f5f2ee]/80"
+    title: "text-[#f5f2ee]", sub: "text-[#f5f2ee]/75", eyebrow: "text-[#f5f2ee]/80"
   },
   ink: {
     label: "Ink", note: "Dark navy type. This is the one that works on the light full frame ground, where white type disappears.",
@@ -361,18 +376,24 @@ export default function SitePreview() {
         <div className="absolute inset-0 flex items-center">
           <div className="mx-auto w-full max-w-[1400px] px-6">
             <Reveal>
-              <p className={`font-mono text-[12px] uppercase tracking-[0.3em] ${HERO_TYPE[heroType].eyebrow}`}>
+              <p
+                className={`font-mono text-[12px] uppercase tracking-[0.3em] ${HERO_TYPE[heroType].eyebrow}`}
+                style={{ textShadow: HERO_TYPE[heroType].shadow }}
+              >
                 Est. {shop.est} &middot; Milpitas &amp; Irvine
               </p>
             </Reveal>
             <Reveal delay={130}>
               <h1
                 className={`mt-6 max-w-3xl text-[clamp(2.4rem,6vw,4.75rem)] leading-[1.02] tracking-[-0.025em] ${HERO_TYPE[heroType].title}`}
-                style={{ fontFamily: SERIF }}
+                style={{ fontFamily: SERIF, textShadow: HERO_TYPE[heroType].shadow }}
               >
                 {shop.name}
               </h1>
-              <p className={`mt-5 max-w-xl text-[clamp(1rem,1.6vw,1.25rem)] leading-relaxed ${HERO_TYPE[heroType].sub}`}>
+              <p
+                className={`mt-5 max-w-xl text-[clamp(1rem,1.6vw,1.25rem)] leading-relaxed ${HERO_TYPE[heroType].sub}`}
+                style={{ textShadow: HERO_TYPE[heroType].shadow }}
+              >
                 Personalized, luxury haircuts.
               </p>
             </Reveal>
