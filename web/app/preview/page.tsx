@@ -9,7 +9,7 @@
  * Delete web/app/preview/ once this is signed off and folded into the site.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Michroma } from "next/font/google";
@@ -91,14 +91,50 @@ const SECTIONS: Array<[string, string]> = [
   ["gallery", "Gallery"], ["locations", "Locations"], ["book", "Book"]
 ];
 
+/*
+ * Preview settings persist across reloads.
+ *
+ * They are ordinary React state, so every refresh was resetting them to the
+ * defaults and the page came back showing something other than what had been
+ * chosen. localStorage keeps the last selection.
+ */
+const STORE_KEY = "hh-preview-settings";
+
+function useStored<T extends string | boolean>(key: string, initial: T) {
+  const [value, setValue] = useState<T>(initial);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORE_KEY);
+      if (raw) {
+        const all = JSON.parse(raw);
+        if (all && key in all) { setValue(all[key] as T); }
+      }
+    } catch { /* corrupt or unavailable storage is not worth failing over */ }
+    setLoaded(true);
+  }, [key]);
+
+  useEffect(() => {
+    if (!loaded) { return; }
+    try {
+      const raw = window.localStorage.getItem(STORE_KEY);
+      const all = raw ? JSON.parse(raw) : {};
+      window.localStorage.setItem(STORE_KEY, JSON.stringify({ ...all, [key]: value }));
+    } catch { /* ignore */ }
+  }, [key, value, loaded]);
+
+  return [value, setValue] as const;
+}
+
 export default function SitePreview() {
-  const [heroId, setHeroId] = useState(heroOptions[0].id);
-  const [fit, setFit] = useState<HeroFit>("triptych");
-  const [estColor, setEstColor] = useState<EstColor>("deep");
-  const [estBig, setEstBig] = useState(true);
-  const [heroType, setHeroType] = useState<HeroType>("white");
+  const [heroId, setHeroId] = useStored<string>("heroId", heroOptions[0].id);
+  const [fit, setFit] = useStored<HeroFit>("fit", "triptych");
+  const [estColor, setEstColor] = useStored<EstColor>("estColor", "darkcyan");
+  const [estBig, setEstBig] = useStored<boolean>("estBig", true);
+  const [heroType, setHeroType] = useStored<HeroType>("heroType", "shadow");
   /* Collapses the preview toolbar so the page can be judged on its own. */
-  const [chrome, setChrome] = useState(true);
+  const [chrome, setChrome] = useStored<boolean>("chrome", true);
   const heroOption = heroOptions.find((option) => option.id === heroId) ?? heroOptions[0];
   const fitOption = heroFits.find((option) => option.id === fit) ?? heroFits[0];
   /* KSG 1 cannot be both hero and services photo. */
@@ -121,7 +157,8 @@ export default function SitePreview() {
         </button>
       )}
 
-      <div className={`sticky top-0 z-[100] border-b border-white/10 bg-neutral-950 px-5 py-2 ${chrome ? "" : "hidden"}`}>
+      {chrome && (
+      <div className="sticky top-0 z-[100] border-b border-white/10 bg-neutral-950 px-5 py-2">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-5 gap-y-2">
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
             Preview
@@ -222,6 +259,7 @@ export default function SitePreview() {
           {heroOption.note} <span className="text-neutral-400">{fitOption.note}</span> <span className="text-neutral-400">{HERO_TYPE[heroType].note}</span>
         </p>
       </div>
+      )}
 
       {/* nav */}
       <header className={`sticky z-50 border-b border-neutral-900/10 bg-[#f5f2ee]/92 backdrop-blur ${chrome ? "top-[92px]" : "top-0"}`}>
