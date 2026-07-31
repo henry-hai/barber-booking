@@ -1,0 +1,28 @@
+{
+  "//": "This repo currently lives inside a OneDrive-synced folder. VS Code's file watcher and OneDrive both walk node_modules and .next, which together hold tens of thousands of files that change on every build. Excluding them stops the editor competing with the sync engine. The real fix is moving the repo out of OneDrive; these settings only reduce the damage.",
+
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.next/**": true,
+    "**/dist/**": true,
+    "**/.git/objects/**": true,
+    "**/playwright-report/**": true,
+    "**/test-results/**": true
+  },
+
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/dist": true,
+    "**/package-lock.json": true
+  },
+
+  "files.exclude": {
+    "**/.next": true
+  },
+
+  "typescript.tsserver.watchOptions": {
+    "watchFile": "useFsEventsOnParentDirectory",
+    "watchDirectory": "useFsEvents"
+  }
+}
