@@ -4,10 +4,10 @@
  */
 
 export const site = {
-  name: "Henry Hai's Barbershop",
-  shortName: "Henry Hai's Barbershop",
+  name: "Henry Hai Studio",
+  shortName: "Henry Hai Studio",
   description:
-    "Personalized, luxury haircut experiences in Irvine and Milpitas, California. " +
+    "Personalized, luxury haircuts in Milpitas and Irvine, California. " +
     "Clipper and scissor cuts, beard work, line-ups and designs by appointment.",
   /* Overridden per deployment; the fallback keeps builds working locally. */
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://henryhaibarbershop.com",

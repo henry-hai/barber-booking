@@ -96,7 +96,7 @@ function header(heading: string): string {
   return `<tr>
 <td style="background-color:${COLORS.brand}; padding:24px; border-radius:8px 8px 0 0;">
 <h1 style="margin:0; font-family:${FONT}; font-size:20px; line-height:28px; font-weight:bold; color:#ffffff;">${escapeHtml(heading)}</h1>
-<p style="margin:4px 0 0 0; font-family:${FONT}; font-size:14px; line-height:20px; color:#ffffff;">Henry Hai&#39;s Barbershop</p>
+<p style="margin:4px 0 0 0; font-family:${FONT}; font-size:14px; line-height:20px; color:#ffffff;">Henry Hai Studio</p>
 </td>
 </tr>`;
 }
@@ -104,7 +104,7 @@ function header(heading: string): string {
 function footer(): string {
   return `<tr>
 <td style="padding:16px 24px 24px 24px; border-top:1px solid ${COLORS.hairline};">
-<p style="margin:0; font-family:${FONT}; font-size:12px; line-height:18px; color:${COLORS.muted};">Henry Hai&#39;s Barbershop &mdash; Irvine &amp; Milpitas, CA</p>
+<p style="margin:0; font-family:${FONT}; font-size:12px; line-height:18px; color:${COLORS.muted};">Henry Hai Studio, Milpitas &amp; Irvine, CA</p>
 </td>
 </tr>`;
 }
@@ -148,7 +148,7 @@ function slotLines(payload: IBookingPayload): string {
  * offered, so they have a record of what they asked for.
  */
 export function renderClientConfirmation(payload: IBookingPayload): IRenderedEmail {
-  const subject = `Appointment request received - Henry Hai's Barbershop`;
+  const subject = `Appointment request received - Henry Hai Studio`;
 
   const html = wrap(subject, `${header("Your request is in")}
 <tr>
@@ -192,8 +192,8 @@ YOUR DETAILS
 If any of this looks wrong, just reply to this email and I'll sort it out.
 
 --
-Henry Hai's Barbershop
-Irvine & Milpitas, CA
+Henry Hai Studio
+Milpitas & Irvine, CA
 `;
 
   return { subject, text, html };
