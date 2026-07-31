@@ -14,15 +14,22 @@
 
 import { IBookingPayload, NA, serializeBookingBlock } from "./Booking";
 
-/* Tailwind palette values used by the site, so the emails match it. */
+/*
+ * The site's palette, so an email reads as coming from the same place.
+ *
+ * Bone ground, ink type, and cyan used once per section rather than everywhere.
+ * The accent is the darker cyan, not the bright one: the bright value is for a
+ * mark sitting on a photograph, and on a pale ground at small sizes it stops
+ * being readable, which is the same reason the site's Est. 2013 line uses it.
+ */
 const COLORS = {
-  brand: "#00b9ff",
-  ink: "#1f2937",       // gray-800
-  body: "#374151",      // gray-700
-  muted: "#6b7280",     // gray-500
-  hairline: "#e5e7eb",  // gray-200
-  panel: "#f3f4f6",     // gray-100
-  page: "#f9fafb"       // gray-50
+  brand: "#0b6f85",     // dark cyan, holds contrast on bone
+  ink: "#1b2436",       // headline navy
+  body: "#4b5563",      // body copy
+  muted: "#6f7683",     // labels
+  hairline: "#e2ddd5",  // rules
+  panel: "#efebe5",     // slot cards
+  page: "#f5f2ee"       // bone ground
 };
 
 const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
@@ -94,9 +101,9 @@ ${inner}
 /* Brand-colored header bar with the shop name. */
 function header(heading: string): string {
   return `<tr>
-<td style="background-color:${COLORS.brand}; padding:24px; border-radius:8px 8px 0 0;">
+<td style="background-color:${COLORS.ink}; padding:24px; border-radius:8px 8px 0 0;">
 <h1 style="margin:0; font-family:${FONT}; font-size:20px; line-height:28px; font-weight:bold; color:#ffffff;">${escapeHtml(heading)}</h1>
-<p style="margin:4px 0 0 0; font-family:${FONT}; font-size:14px; line-height:20px; color:#ffffff;">Henry Hai Studio</p>
+<p style="margin:4px 0 0 0; font-family:${FONT}; font-size:12px; line-height:20px; letter-spacing:2px; text-transform:uppercase; color:#7fd3e4;">Henry Hai Studio</p>
 </td>
 </tr>`;
 }
