@@ -11,7 +11,7 @@ export const site = {
     "Clipper and scissor cuts, beard work, line-ups and designs by appointment.",
   /* Overridden per deployment; the fallback keeps builds working locally. */
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://henryhaibarbershop.com",
-  ogImage: "/img/BW_BARBERSHOP_4.jpg",
+  ogImage: "/img/barbershop-interior.jpg",
   instagram: "https://www.instagram.com/henryhai_",
   linkedin: "https://www.linkedin.com/in/henry-hai-nguyen",
   phone: "408-858-707",
@@ -24,7 +24,7 @@ export const locations = [
     name: "Irvine",
     address: "71000 Verano Rd, Irvine, CA 92617",
     phone: site.phone,
-    image: "/img/13_Jason_2.JPG",
+    image: "/img/jason-02.jpg",
     hours: ["Mon - Fri: TBD", "Sat: TBD", "Sun: TBD"]
   },
   {
@@ -32,7 +32,7 @@ export const locations = [
     name: "Milpitas",
     address: "Kennedy Dr, Milpitas, CA 95035",
     phone: site.phone,
-    image: "/img/8_Adrian_1.JPG",
+    image: "/img/adrian-01.jpg",
     hours: ["Mon - Fri: TBD", "Sat: TBD", "Sun: TBD"]
   }
 ] as const;

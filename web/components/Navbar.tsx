@@ -19,7 +19,7 @@ export default function Navbar() {
 
         <a href="#" className="flex items-center">
           <Image
-            src="/img/smallLogo.JPG"
+            src="/img/logo-original.jpg"
             alt="Henry Hai's Barbershop logo"
             width={48}
             height={48}

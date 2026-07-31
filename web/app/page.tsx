@@ -48,7 +48,7 @@ export default function Home() {
       {/* Hero */}
       <section id="hero" className="relative h-screen">
         <Image
-          src="/img/BW_BARBERSHOP_4.jpg"
+          src="/img/barbershop-interior.jpg"
           alt=""
           fill
           priority
@@ -64,7 +64,7 @@ export default function Home() {
       <section id="about" className="py-16 bg-gray-100">
         <div className="container mx-auto flex flex-col md:flex-row items-center justify-center px-6 text-center md:text-left">
           <Image
-            src="/img/intro_portrait.jpg"
+            src="/img/henry-portrait.jpg"
             alt="Henry Hai in the shop"
             width={600}
             height={800}
@@ -104,7 +104,7 @@ export default function Home() {
 
           <div className="hidden md:block md:mt-0 md:w-1/3 md:ml-8">
             <Image
-              src="/img/4_KSG_1.JPG"
+              src="/img/ksg-01.jpg"
               alt="Mid fade with a scissor-cut top"
               width={600}
               height={800}
