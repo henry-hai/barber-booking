@@ -18,37 +18,45 @@ export const site = {
   foundedYear: 2013
 } as const;
 
+/* Milpitas first: that is where the practice started. */
 export const locations = [
-  {
-    id: "irvine",
-    name: "Irvine",
-    address: "71000 Verano Rd, Irvine, CA 92617",
-    phone: site.phone,
-    image: "/img/jason-02.jpg",
-    hours: ["Mon - Fri: TBD", "Sat: TBD", "Sun: TBD"]
-  },
   {
     id: "milpitas",
     name: "Milpitas",
     address: "Kennedy Dr, Milpitas, CA 95035",
     phone: site.phone,
     image: "/img/adrian-01.jpg",
+    note: "Where it started.",
+    hours: ["Mon - Fri: TBD", "Sat: TBD", "Sun: TBD"]
+  },
+  {
+    id: "irvine",
+    name: "Irvine",
+    address: "71000 Verano Rd, Irvine, CA 92617",
+    phone: site.phone,
+    image: "/img/jason-02.jpg",
+    note: "",
     hours: ["Mon - Fri: TBD", "Sat: TBD", "Sun: TBD"]
   }
 ] as const;
 
+/*
+ * `detail` carries the rule that used to live in an asterisked footnote under
+ * the price list. Attaching it to the row it governs means the menu states its
+ * own terms instead of deferring to a paragraph nobody reads.
+ */
 export const services = [
-  { name: "Haircut: Clipper Cut", price: "$35" },
-  { name: "Haircut: Clipper + Scissor Cut", price: "$40" },
-  { name: "Goatee & Mustache", price: "+ $5" },
-  { name: "Goatee, Mustache, & Beard", price: "+ $10" },
-  { name: "Eyebrows (Straight Razor)", price: "+ $5" },
-  { name: "Design", price: "+ $5-10" },
-  { name: "Lineup: Hairline + Nape", price: "$15" },
-  { name: "Lineup: Full Service + Beard", price: "$20" },
-  { name: "Braids", price: "$20" },
-  { name: "Threaded Eyebrows", price: "$15" },
-  { name: "Housecall", price: "$100 + Add-On Prices" }
+  { name: "Haircut: Clipper Cut", price: "$35", detail: "Includes a line-up." },
+  { name: "Haircut: Clipper + Scissor Cut", price: "$40", detail: "Includes a line-up." },
+  { name: "Goatee & Mustache", price: "+$5", detail: "Add-on. Attaches to a haircut." },
+  { name: "Goatee, Mustache, & Beard", price: "+$10", detail: "Add-on. Attaches to a haircut." },
+  { name: "Eyebrows (Straight Razor)", price: "+$5", detail: "Add-on. Attaches to a haircut." },
+  { name: "Design", price: "+$5-10", detail: "Add-on. Priced by complexity." },
+  { name: "Lineup: Hairline + Nape", price: "$15", detail: "A la carte only." },
+  { name: "Lineup: Full Service + Beard", price: "$20", detail: "A la carte only." },
+  { name: "Braids", price: "$20", detail: "A la carte." },
+  { name: "Threaded Eyebrows", price: "$15", detail: "A la carte." },
+  { name: "Housecall", price: "$100", detail: "Plus add-on prices." }
 ] as const;
 
 export const bookingPolicies = [
@@ -59,6 +67,24 @@ export const bookingPolicies = [
   "Please wash hair thoroughly before for best results.",
   "Remove all upper cartilage earrings if applicable."
 ] as const;
+
+/*
+ * The hero triptych, in order across the banner.
+ *
+ * These are fixed compositions, not a photograph chosen elsewhere and reused.
+ * Each carries its own crop: the centre frame sits left of centre on purpose,
+ * because the HENRYHAI signature runs down the right edge of that photograph
+ * and pulling the crop left walks it out of view. Nothing is retouched.
+ */
+export const heroPanels = [
+  { src: "/img/cam-02.jpg", focus: "50% 28%" },
+  { src: "/img/adrian-03.jpg", focus: "34% 26%" },
+  { src: "/img/hoang-01.jpg", focus: "50% 30%" }
+] as const;
+
+/* A phone gets one frame. A tall viewport keeps far more of a 4:5 portrait
+   than a wide one, so this crop is not the same as any desktop panel's. */
+export const heroMobile = { src: "/img/adrian-03.jpg", focus: "50% 34%" } as const;
 
 export const navLinks = [
   { href: "#about", label: "About" },
