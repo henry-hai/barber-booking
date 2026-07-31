@@ -15,22 +15,22 @@ export const nav = ["About", "Services", "Gallery", "Locations"];
 
 /* Row one, 4:5. */
 export const rowOne = [
-  "/img/1_Murthi_1.JPG", "/img/2_Murthi_2.JPG", "/img/3_Jason_1.JPG",
-  "/img/4_KSG_1.JPG", "/img/6_Alex_1.JPG", "/img/5_KSG_2.JPG",
-  "/img/7_Alex_2.JPG", "/img/8_Adrian_1.JPG", "/img/9_Adrian_2.JPG",
-  "/img/10_Adrian_3.JPG", "/img/11_Elijah_2.JPG", "/img/12_Elijah_2.JPG",
-  "/img/13_Jason_2.JPG", "/img/14_Chester_1.JPG", "/img/15_Chester_2.JPG"
+  "/img/murthi-01.jpg", "/img/murthi-02.jpg", "/img/jason-01.jpg",
+  "/img/ksg-01.jpg", "/img/alex-01.jpg", "/img/ksg-02.jpg",
+  "/img/alex-02.jpg", "/img/adrian-01.jpg", "/img/adrian-02.jpg",
+  "/img/adrian-03.jpg", "/img/elijah-01.jpg", "/img/elijah-02.jpg",
+  "/img/jason-02.jpg", "/img/chester-01.jpg", "/img/chester-02.jpg"
 ];
 
 /* Row two, 1:1. */
 export const rowTwo = [
-  "/img/19_Cam_1.jpg", "/img/20_Cam_2.jpg", "/img/25_Andrew_1.JPG",
-  "/img/26_Hoang_1.jpg", "/img/27_JD_1.jpg", "/img/28_JD_2.jpg",
-  "/img/29_Dev_1.JPG", "/img/30_Dev_2.JPG", "/img/21_RR_1.JPG",
-  "/img/22_RR_2.JPG", "/img/23_RR_3.JPG", "/img/24_RR_4.JPG",
-  "/img/16_Ben_1.JPG", "/img/17_Ben_2.JPG", "/img/18_Ben_3.JPG",
-  "/img/31_Hoang_2.jpg", "/img/32_Hoang_3.jpg", "/img/33_Hoang_4.jpg",
-  "/img/34_Hoang_5.jpg"
+  "/img/cam-01.jpg", "/img/cam-02.jpg", "/img/andrew-01.jpg",
+  "/img/hoang-01.jpg", "/img/jd-01.jpg", "/img/jd-02.jpg",
+  "/img/dev-01.jpg", "/img/dev-02.jpg", "/img/rr-01.jpg",
+  "/img/rr-02.jpg", "/img/rr-03.jpg", "/img/rr-04.jpg",
+  "/img/ben-01.jpg", "/img/ben-02.jpg", "/img/ben-03.jpg",
+  "/img/hoang-02.jpg", "/img/hoang-03.jpg", "/img/hoang-04.jpg",
+  "/img/hoang-05.jpg"
 ];
 
 export const artwork = [
@@ -96,15 +96,15 @@ export type HeroFit = typeof heroFits[number]["id"];
  * photograph, so choosing Triptych appeared to do nothing.
  */
 export const TRIPTYCH: Array<{ src: string; focus: string }> = [
-  { src: "/img/20_Cam_2.jpg", focus: "50% 28%" },
+  { src: "/img/cam-02.jpg", focus: "50% 28%" },
   /*
    * Shifted left of centre on purpose. The HENRYHAI signature sits on the right
    * edge of this frame, and pulling the crop left walks it out of view. Nothing
    * is painted over or invented; the panel simply shows a different part of the
    * photograph.
    */
-  { src: "/img/10_Adrian_3.JPG", focus: "34% 26%" },
-  { src: "/img/26_Hoang_1.jpg", focus: "50% 30%" }
+  { src: "/img/adrian-03.jpg", focus: "34% 26%" },
+  { src: "/img/hoang-01.jpg", focus: "50% 30%" }
 ];
 
 /*
@@ -121,7 +121,7 @@ export const TRIPTYCH: Array<{ src: string; focus: string }> = [
 export const heroOptions: IHeroOption[] = [
   {
     id: "adrian3",
-    src: "/img/10_Adrian_3.JPG",
+    src: "/img/adrian-03.jpg",
     label: "Adrian 3",
     note: "Back of the head, blue braids. The blue already agrees with the cyan. The phone crop is untouched.",
     focusMobile: "50% 34%",
@@ -133,7 +133,7 @@ export const heroOptions: IHeroOption[] = [
   },
   {
     id: "cam2",
-    src: "/img/20_Cam_2.jpg",
+    src: "/img/cam-02.jpg",
     label: "Cam 2",
     note: "The most composed of the set. Reads luxury rather than edge.",
     focusMobile: "50% 38%",
@@ -145,7 +145,7 @@ export const heroOptions: IHeroOption[] = [
   },
   {
     id: "hoang1",
-    src: "/img/26_Hoang_1.jpg",
+    src: "/img/hoang-01.jpg",
     label: "Hoang 1",
     note: "Harder and more street. Furthest from quiet luxury.",
     focusMobile: "50% 40%",
@@ -157,7 +157,7 @@ export const heroOptions: IHeroOption[] = [
   },
   {
     id: "ksg1",
-    src: "/img/4_KSG_1.JPG",
+    src: "/img/ksg-01.jpg",
     label: "KSG 1",
     note: "Simple and clean. Promoting this to hero moves Murthi 1 into the services slot.",
     focusMobile: "50% 32%",
@@ -170,9 +170,9 @@ export const heroOptions: IHeroOption[] = [
 ];
 
 /* The services photograph the original site used. */
-export const servicesPhoto = "/img/4_KSG_1.JPG";
+export const servicesPhoto = "/img/ksg-01.jpg";
 /* Used instead when KSG 1 is promoted to the hero. */
-export const servicesPhotoAlt = "/img/1_Murthi_1.JPG";
+export const servicesPhotoAlt = "/img/murthi-01.jpg";
 
 /*
  * Services. `detail` is the per-item rule, surfaced on hover rather than as a

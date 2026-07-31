@@ -97,7 +97,7 @@ export default function LogoLab() {
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-16">
             <div>
-              <Image src="/img/smallLogo.JPG" alt="Original" width={502} height={174} className="h-[120px] w-auto" />
+              <Image src="/img/logo-original.jpg" alt="Original" width={502} height={174} className="h-[120px] w-auto" />
               <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-400">Original</p>
             </div>
             <div>
