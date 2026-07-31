@@ -1,16 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import Gallery from "@/components/Gallery";
+import GalleryTabs from "@/components/GalleryTabs";
 import { galleryTabs } from "@/lib/gallery";
 
 const haircuts = galleryTabs.find((tab) => tab.id === "haircuts")!;
 const artwork = galleryTabs.find((tab) => tab.id === "artwork")!;
 
-describe("Gallery", () => {
+/* Rows scroll by two card widths. The card is 232px wide. */
+const SCROLL_STEP = 232 * 2;
+
+describe("GalleryTabs", () => {
 
   it("opens on the Haircuts tab", () => {
-    render(<Gallery />);
+    render(<GalleryTabs />);
     expect(screen.getByRole("tab", { name: "Haircuts" }))
       .toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: "Artwork" }))
@@ -18,23 +21,22 @@ describe("Gallery", () => {
   });
 
   it("renders Haircuts as two rows keeping their different aspect ratios", () => {
-    render(<Gallery />);
+    render(<GalleryTabs />);
     const panel = screen.getByRole("tabpanel");
 
     expect(haircuts.rows).toHaveLength(2);
     /* Row one is 4:5 and row two is 1:1, matching the live site. The two rows
        differing is the design, so a change here is a regression, not a restyle. */
-    expect(haircuts.rows[0].sizeClasses).toBe("w-56 h-[280px]");
-    expect(haircuts.rows[1].sizeClasses).toBe("w-56 h-56");
+    expect(haircuts.rows[0].height / haircuts.rows[0].width).toBeCloseTo(1.25);
+    expect(haircuts.rows[1].height / haircuts.rows[1].width).toBeCloseTo(1);
 
-    const images = within(panel).getAllByRole("img");
-    expect(images).toHaveLength(
+    expect(within(panel).getAllByRole("img")).toHaveLength(
       haircuts.rows[0].photos.length + haircuts.rows[1].photos.length
     );
   });
 
   it("gives every haircut photo descriptive alt text", () => {
-    render(<Gallery />);
+    render(<GalleryTabs />);
     for (const image of within(screen.getByRole("tabpanel")).getAllByRole("img")) {
       expect(image.getAttribute("alt")?.length ?? 0).toBeGreaterThan(0);
     }
@@ -42,7 +44,7 @@ describe("Gallery", () => {
 
   it("switches to Artwork and back", async () => {
     const user = userEvent.setup();
-    render(<Gallery />);
+    render(<GalleryTabs />);
 
     await user.click(screen.getByRole("tab", { name: "Artwork" }));
     expect(screen.getByRole("tab", { name: "Artwork" }))
@@ -55,52 +57,92 @@ describe("Gallery", () => {
       .toBeGreaterThan(0);
   });
 
-  it("shows Artwork as a single row of four", async () => {
+  it("keeps the artwork hidden until its tab is chosen", async () => {
     const user = userEvent.setup();
-    render(<Gallery />);
+    render(<GalleryTabs />);
+
+    const artworkSources = artwork.rows[0].photos.map((photo) => photo.src);
+    const shown = () => within(screen.getByRole("tabpanel"))
+      .getAllByRole("img")
+      .map((image) => decodeURIComponent(image.getAttribute("src") ?? ""));
+
+    expect(shown().some((src) => artworkSources.some((a) => src.includes(a)))).toBe(false);
+
+    await user.click(screen.getByRole("tab", { name: "Artwork" }));
+    expect(shown().every((src) => artworkSources.some((a) => src.includes(a)))).toBe(true);
+  });
+
+  it("shows Artwork as a single row of four at one aspect ratio", async () => {
+    const user = userEvent.setup();
+    render(<GalleryTabs />);
     await user.click(screen.getByRole("tab", { name: "Artwork" }));
 
     expect(artwork.rows).toHaveLength(1);
     expect(artwork.rows[0].photos).toHaveLength(4);
-    /* One aspect ratio across the row, unlike the two-row Haircuts tab. */
-    expect(artwork.rows[0].sizeClasses).toBe("w-56 h-[280px]");
-  });
-
-  it("renders the four artwork images with descriptive alt text", async () => {
-    const user = userEvent.setup();
-    render(<Gallery />);
-    await user.click(screen.getByRole("tab", { name: "Artwork" }));
-
-    const images = within(screen.getByRole("tabpanel")).getAllByRole("img");
-    expect(images).toHaveLength(4);
-    for (const image of images) {
-      expect(image.getAttribute("alt")?.length ?? 0).toBeGreaterThan(0);
-    }
+    /* 4:5, matching row one, so the section does not jump height on switch. */
+    expect(artwork.rows[0].height / artwork.rows[0].width).toBeCloseTo(1.25);
+    expect(within(screen.getByRole("tabpanel")).getAllByRole("img")).toHaveLength(4);
   });
 
   it("gives each row a labelled pair of scroll buttons", () => {
-    render(<Gallery />);
-    expect(screen.getByRole("button", { name: "Scroll Haircuts row 1 left" }))
-      .toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Scroll Haircuts row 1 right" }))
-      .toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Scroll Haircuts row 2 left" }))
-      .toBeInTheDocument();
+    render(<GalleryTabs />);
+    for (const label of [
+      "Scroll Haircuts row 1 left", "Scroll Haircuts row 1 right",
+      "Scroll Haircuts row 2 left", "Scroll Haircuts row 2 right"
+    ]) {
+      expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
+    }
   });
 
-  it("scrolls a row by 200px per arrow click", async () => {
+  it("scrolls a row by two cards per arrow click", async () => {
     const user = userEvent.setup();
-    render(<Gallery />);
+    render(<GalleryTabs />);
 
     const scrollBy = vi.fn();
-    const container = document.getElementById("photo-container")!;
-    container.scrollBy = scrollBy;
+    document.getElementById(haircuts.rows[0].id)!.scrollBy = scrollBy;
 
     await user.click(screen.getByRole("button", { name: "Scroll Haircuts row 1 right" }));
-    expect(scrollBy).toHaveBeenCalledWith({ left: 200, behavior: "smooth" });
+    expect(scrollBy).toHaveBeenCalledWith({ left: SCROLL_STEP, behavior: "smooth" });
 
     await user.click(screen.getByRole("button", { name: "Scroll Haircuts row 1 left" }));
-    expect(scrollBy).toHaveBeenCalledWith({ left: -200, behavior: "smooth" });
+    expect(scrollBy).toHaveBeenCalledWith({ left: -SCROLL_STEP, behavior: "smooth" });
+  });
+
+  it("opens a photograph in the lightbox rather than navigating to the file", async () => {
+    const user = userEvent.setup();
+    render(<GalleryTabs />);
+
+    /* Every photo is a button, not a link. A bare .jpg href makes browsers
+       download the file instead of showing it. */
+    const first = within(screen.getByRole("tabpanel")).getAllByRole("button")[0];
+    await user.click(first);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByText(`1 / ${haircuts.rows[0].photos.length}`)).toBeInTheDocument();
+  });
+
+  it("steps through the set and closes on Escape", async () => {
+    const user = userEvent.setup();
+    render(<GalleryTabs />);
+
+    await user.click(within(screen.getByRole("tabpanel")).getAllByRole("button")[0]);
+    const dialog = await screen.findByRole("dialog");
+
+    await user.click(within(dialog).getByRole("button", { name: "Next" }));
+    expect(within(dialog).getByText(`2 / ${haircuts.rows[0].photos.length}`)).toBeInTheDocument();
+
+    /* Wraps rather than running off the end. */
+    await user.click(within(dialog).getByRole("button", { name: "Previous" }));
+    await user.click(within(dialog).getByRole("button", { name: "Previous" }));
+    expect(
+      within(dialog).getByText(
+        `${haircuts.rows[0].photos.length} / ${haircuts.rows[0].photos.length}`
+      )
+    ).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
 });

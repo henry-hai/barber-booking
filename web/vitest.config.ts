@@ -5,7 +5,13 @@ import path from "node:path";
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: { "@": path.resolve(__dirname, ".") }
+    alias: {
+      "@": path.resolve(__dirname, "."),
+      /* next/font is a build-time transform, so outside the Next compiler the
+         import is not callable and any component using a typeface throws on
+         load. See tests/mocks/next-font.ts. */
+      "next/font/google": path.resolve(__dirname, "tests/mocks/next-font.ts")
+    }
   },
   test: {
     environment: "jsdom",
