@@ -19,7 +19,7 @@ import {
   BookingForm, Locations, MobileMenu, Reveal, SectionIndex, ServicesMenu
 } from "./_shared/Parts";
 import {
-  TRIPTYCHS, heroFits, heroOptions, nav, servicesPhoto, servicesPhotoAlt, shop, type HeroFit
+  TRIPTYCH, heroFits, heroOptions, nav, servicesPhoto, servicesPhotoAlt, shop, type HeroFit
 } from "./_shared/data";
 
 const michroma = Michroma({ subsets: ["latin"], weight: "400" });
@@ -59,21 +59,15 @@ const HERO_TYPE: Record<HeroType, { label: string; note: string; title: string; 
 };
 
 /*
- * How adjacent triptych panels meet.
+ * The triptych panels dissolve directly into one another over a 12 percent
+ * fade, with no gap and no rule.
  *
- * `gap` is real space between the panels, `feather` is how far each photograph
- * fades into that space. A gap with no feather is a hard line; feather with no
- * gap makes the frames bleed into each other. Together they give separation
- * without a drawn edge, which is what the wash behind them is for.
+ * Every alternative was tried and rejected: a hairline rule and any real gap
+ * both read as a drawn edge no matter how narrow, which was the one thing that
+ * had to go. There is no control for this any more because there is only one
+ * setting worth having.
  */
-type Seam = "line" | "soft" | "open" | "blend";
-
-const SEAMS: Record<Seam, { label: string; note: string; gap: number; feather: number; rule: boolean }> = {
-  line: { label: "Hairline", note: "A clean 1px rule between panels. The only setting with a drawn edge.", gap: 0, feather: 0, rule: true },
-  soft: { label: "Soft gap", note: "A narrow gap with the photograph edges fading into it, so the frames are separated by light rather than by a line.", gap: 1.6, feather: 5, rule: false },
-  open: { label: "Open gap", note: "A wider gap and a deeper fade. More air between the three, still no edge.", gap: 3.4, feather: 8, rule: false },
-  blend: { label: "Blended", note: "No gap at all, the frames dissolving directly into one another.", gap: 0, feather: 12, rule: false }
-};
+const FEATHER = 12;
 
 const SECTIONS: Array<[string, string]> = [
   ["about", "About"], ["services", "Services"],
@@ -86,14 +80,13 @@ export default function SitePreview() {
   const [estColor, setEstColor] = useState<EstColor>("deep");
   const [estBig, setEstBig] = useState(true);
   const [heroType, setHeroType] = useState<HeroType>("white");
-  const [seam, setSeam] = useState<Seam>("soft");
   const heroOption = heroOptions.find((option) => option.id === heroId) ?? heroOptions[0];
   const fitOption = heroFits.find((option) => option.id === fit) ?? heroFits[0];
   /* KSG 1 cannot be both hero and services photo. */
   const menuPhoto = heroOption.id === "ksg1" ? servicesPhotoAlt : servicesPhoto;
   /* The frames for a multi-panel fit, or null when this hero has no set. */
-  const panels = fit === "triptych" || fit === "triptych2" ? TRIPTYCHS[fit] : null;
-  const isTriptych = fit === "triptych" || fit === "triptych2";
+  const panels = fit === "triptych" ? TRIPTYCH : null;
+  const isTriptych = fit === "triptych";
 
   return (
     <div className="bg-[#f5f2ee] text-neutral-900">
@@ -171,26 +164,6 @@ export default function SitePreview() {
           </button>
         </div>
 
-        {isTriptych && (
-          <div className="mx-auto mt-1.5 flex max-w-[1400px] flex-wrap items-center gap-1">
-            <span className="mr-2 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
-              Seam
-            </span>
-            {(Object.keys(SEAMS) as Seam[]).map((key) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setSeam(key)}
-                className={`rounded px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors ${
-                  key === seam ? "bg-[#22c3dd] text-neutral-900" : "text-neutral-400 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                {SEAMS[key].label}
-              </button>
-            ))}
-          </div>
-        )}
-
         <div className="mx-auto mt-1.5 flex max-w-[1400px] flex-wrap items-center gap-1">
           <span className="mr-2 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
             Hero type
@@ -210,7 +183,7 @@ export default function SitePreview() {
         </div>
 
         <p className="mx-auto mt-1.5 max-w-[1400px] text-[11px] leading-relaxed text-neutral-500">
-          {heroOption.note} <span className="text-neutral-400">{fitOption.note}</span> <span className="text-neutral-400">{HERO_TYPE[heroType].note}</span>{isTriptych && <span className="text-neutral-400"> {SEAMS[seam].note}</span>}
+          {heroOption.note} <span className="text-neutral-400">{fitOption.note}</span> <span className="text-neutral-400">{HERO_TYPE[heroType].note}</span>
         </p>
       </div>
 
@@ -260,48 +233,33 @@ export default function SitePreview() {
                 is what lets the panels stay at exactly one third each. */}
             <div className="absolute inset-0 hidden md:block">
               <Image
-                src={panels[1]} alt="" fill sizes="100vw"
+                src={panels[1].src} alt="" fill sizes="100vw"
                 style={{ objectPosition: "50% 30%" }}
-                className="scale-[1.6] object-cover blur-[70px] brightness-[1.7] saturate-[0.25]"
+                className="scale-[1.6] object-cover blur-[70px]"
               />
-              {/* Light veil, so the gaps between panels read as air rather than
-                  as a dark band showing through. */}
-              <div className="absolute inset-0 bg-[#f2eee8]/70" />
             </div>
-            <div
-              className="relative hidden h-full md:flex"
-              style={{ gap: `${SEAMS[seam].gap}%` }}
-            >
-              {panels.map((src, index) => {
-                const { feather, rule } = SEAMS[seam];
-                /* Only the edges that touch another panel are faded, so the
-                   outer edges of the banner stay full bleed. */
-                const left = index > 0 ? feather : 0;
-                const right = index < panels.length - 1 ? feather : 0;
-                const mask = feather === 0 ? undefined
-                  : `linear-gradient(to right, transparent 0%, black ${left}%, black ${100 - right}%, transparent 100%)`;
+            <div className="relative hidden h-full md:flex">
+              {panels.map((panel, index) => {
+                /* Only edges that touch another panel fade, so the outer edges
+                   of the banner stay full bleed. */
+                const left = index > 0 ? FEATHER : 0;
+                const right = index < panels.length - 1 ? FEATHER : 0;
+                const mask = `linear-gradient(to right, transparent 0%, black ${left}%, black ${100 - right}%, transparent 100%)`;
 
                 return (
                   <div
-                    key={`${src}-${index}`}
-                    /*
-                      Exactly one third each, with no negative margin. Pulling
-                      the panels together widened each box, and a wider box with
-                      object-cover on a portrait frame crops harder, which is
-                      what made the three read as one zoomed-in creature.
-                    */
+                    key={panel.src}
                     className="relative h-full flex-1"
-                    style={mask ? { maskImage: mask, WebkitMaskImage: mask } : undefined}
+                    style={{ maskImage: mask, WebkitMaskImage: mask }}
                   >
+                    {/* Deliberately never inherits the hero's blur. Selecting
+                        Adrian 3 was softening the whole triptych, which is the
+                        blurred look you did not want. */}
                     <Image
-                      src={src} alt="" fill priority
-                      sizes={`${Math.round(100 / panels.length)}vw`}
-                      style={{ objectPosition: "50% 26%" }}
-                      className={`object-cover ${heroOption.blur ? "blur-[4px]" : ""}`}
+                      src={panel.src} alt="" fill priority sizes="34vw"
+                      style={{ objectPosition: panel.focus }}
+                      className="object-cover"
                     />
-                    {rule && index < panels.length - 1 && (
-                      <span className="absolute inset-y-0 right-0 w-px bg-white/15" />
-                    )}
                   </div>
                 );
               })}
@@ -321,11 +279,11 @@ export default function SitePreview() {
                 where the hard bands were coming from.
               */
               style={{ objectPosition: heroOption.backdropFocus }}
-              className="scale-[1.9] object-cover blur-[90px] brightness-[1.9] saturate-[0.2]"
+              className="scale-[1.9] object-cover blur-[90px] brightness-[1.15] saturate-[0.4]"
             />
             {/* Bone laid over the wash, so the ground is unmistakably light and
                 any residual detail from the photograph cannot read through. */}
-            <div className="absolute inset-0 bg-[#f2eee8]/82" />
+            <div className="absolute inset-0 bg-[#20242c]/28" />
             <div className="absolute inset-0 flex justify-center">
               {/* Feathered left and right so the centre frame dissolves into
                   the wash instead of meeting it at a hard vertical cut. */}
@@ -346,7 +304,7 @@ export default function SitePreview() {
                 {/* The frame numbers and the signature sit in the top corners
                     of the originals. A short fade from the ground colour walks
                     them out without cropping the photograph. */}
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[18%] bg-gradient-to-b from-[#efebe5] via-[#efebe5]/70 to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-[18%] bg-gradient-to-b from-[#3a3f47] via-[#3a3f47]/55 to-transparent" />
               </div>
             </div>
           </>
@@ -381,7 +339,7 @@ export default function SitePreview() {
         <div
           className="absolute inset-0"
           style={fit === "full"
-            ? { backgroundColor: "rgba(245,242,238,0.28)" }
+            ? { backgroundColor: "rgba(15,15,17,0.32)" }
             : { backgroundColor: `rgba(15,15,17,${heroOption.scrim})` }}
         />
         <div className="absolute inset-0 flex items-center">

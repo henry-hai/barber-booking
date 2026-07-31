@@ -83,8 +83,7 @@ export const heroFits = [
   { id: "high", label: "High", note: "Shifted right so the signature clears the edge, and raised, though not to the very top of the frame." },
   { id: "low", label: "Low", note: "Shifted right and dropped, leaving space above the head. Closest to how the phone reads." },
   { id: "full", label: "Full frame", note: "The whole 4:5 photograph, uncropped, with the sides filled by a blurred copy of itself. No pixels invented." },
-  { id: "triptych", label: "Triptych A", note: "Cam 2, Adrian 3 and Hoang 1 across the banner." },
-  { id: "triptych2", label: "Triptych B", note: "Cam 2, Adrian 3 and KSG 1 across the banner." }
+  { id: "triptych", label: "Triptych", note: "Cam 2, Adrian 3 and Hoang 1 across the banner, dissolving into one another." }
 ] as const;
 
 export type HeroFit = typeof heroFits[number]["id"];
@@ -96,10 +95,17 @@ export type HeroFit = typeof heroFits[number]["id"];
  * them off one hero meant picking any other hero silently fell back to a single
  * photograph, so choosing Triptych appeared to do nothing.
  */
-export const TRIPTYCHS: Record<"triptych" | "triptych2", string[]> = {
-  triptych: ["/img/20_Cam_2.jpg", "/img/10_Adrian_3.JPG", "/img/26_Hoang_1.jpg"],
-  triptych2: ["/img/20_Cam_2.jpg", "/img/10_Adrian_3.JPG", "/img/4_KSG_1.JPG"]
-};
+export const TRIPTYCH: Array<{ src: string; focus: string }> = [
+  { src: "/img/20_Cam_2.jpg", focus: "50% 28%" },
+  /*
+   * Shifted left of centre on purpose. The HENRYHAI signature sits on the right
+   * edge of this frame, and pulling the crop left walks it out of view. Nothing
+   * is painted over or invented; the panel simply shows a different part of the
+   * photograph.
+   */
+  { src: "/img/10_Adrian_3.JPG", focus: "34% 26%" },
+  { src: "/img/26_Hoang_1.jpg", focus: "50% 30%" }
+];
 
 /*
  * Hero candidates, all your own photographs.
