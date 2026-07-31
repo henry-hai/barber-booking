@@ -56,7 +56,9 @@ body {
 }
 .brand .brand-name { font-size: 18px; }
 
-/* View toggle (Dashboard / Mailroom). */
+/* App bar label. This was a Dashboard/Mailroom toggle of two buttons; with the
+   mail client unwired there is one destination left, so it renders as a static
+   span and carries no pointer cursor or hover state to imply otherwise. */
 .appNav { display: flex; gap: 6px; }
 .navTab {
   display: inline-flex;
@@ -70,10 +72,8 @@ body {
   font-size: 14px;
   padding: 7px 14px;
   border-radius: 8px;
-  cursor: pointer;
   transition: background-color 0.12s ease, color 0.12s ease;
 }
-.navTab:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
 .navTab.active { background: var(--brand); color: #fff; }
 
 /* Mailroom inner grid: a light action sub-bar over the three-column body. */
