@@ -59,15 +59,17 @@ const HERO_TYPE: Record<HeroType, { label: string; note: string; title: string; 
 };
 
 /*
- * The triptych panels dissolve directly into one another over a 12 percent
- * fade, with no gap and no rule.
+ * The triptych tiles at exactly one third each, with no mask and no gap, and
+ * the two joins are dissolved by narrow strips that blur whatever is behind
+ * them.
  *
- * Every alternative was tried and rejected: a hairline rule and any real gap
- * both read as a drawn edge no matter how narrow, which was the one thing that
- * had to go. There is no control for this any more because there is only one
- * setting worth having.
+ * Fading the panel edges to transparent was the wrong tool: transparency has to
+ * reveal something, and what showed through was the darker wash behind, which
+ * is exactly the dark line down each join. A backdrop blur smears across the
+ * seam without any panel becoming transparent, so there is nothing to show
+ * through, no gap, and no change to any panel's framing.
  */
-const FEATHER = 12;
+const SEAM_WIDTH = 7;
 
 const SECTIONS: Array<[string, string]> = [
   ["about", "About"], ["services", "Services"],
@@ -228,41 +230,33 @@ export default function SitePreview() {
               style={{ objectPosition: heroOption.focusMobile }}
               className={`object-cover md:hidden ${heroOption.blur ? "scale-105 blur-[2px]" : ""}`}
             />
-            {/* A wash of the centre frame sits behind the panels, so a faded
-                join blends into related colour instead of opening a gap. This
-                is what lets the panels stay at exactly one third each. */}
-            <div className="absolute inset-0 hidden md:block">
-              <Image
-                src={panels[1].src} alt="" fill sizes="100vw"
-                style={{ objectPosition: "50% 30%" }}
-                className="scale-[1.6] object-cover blur-[70px]"
-              />
-            </div>
             <div className="relative hidden h-full md:flex">
-              {panels.map((panel, index) => {
-                /* Only edges that touch another panel fade, so the outer edges
-                   of the banner stay full bleed. */
-                const left = index > 0 ? FEATHER : 0;
-                const right = index < panels.length - 1 ? FEATHER : 0;
-                const mask = `linear-gradient(to right, transparent 0%, black ${left}%, black ${100 - right}%, transparent 100%)`;
+              {panels.map((panel) => (
+                <div key={panel.src} className="relative h-full flex-1">
+                  {/* Never inherits the hero's blur. Selecting Adrian 3 was
+                      softening the whole triptych. */}
+                  <Image
+                    src={panel.src} alt="" fill priority sizes="34vw"
+                    style={{ objectPosition: panel.focus }}
+                    className="object-cover"
+                  />
+                </div>
+              ))}
 
-                return (
-                  <div
-                    key={panel.src}
-                    className="relative h-full flex-1"
-                    style={{ maskImage: mask, WebkitMaskImage: mask }}
-                  >
-                    {/* Deliberately never inherits the hero's blur. Selecting
-                        Adrian 3 was softening the whole triptych, which is the
-                        blurred look you did not want. */}
-                    <Image
-                      src={panel.src} alt="" fill priority sizes="34vw"
-                      style={{ objectPosition: panel.focus }}
-                      className="object-cover"
-                    />
-                  </div>
-                );
-              })}
+              {/* The two joins. Each strip blurs across the seam it sits on. */}
+              {[1, 2].map((join) => (
+                <div
+                  key={join}
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-y-0 backdrop-blur-2xl"
+                  style={{
+                    left: `calc(${(100 / 3) * join}% - ${SEAM_WIDTH / 2}%)`,
+                    width: `${SEAM_WIDTH}%`,
+                    maskImage: "linear-gradient(to right, transparent, black 35%, black 65%, transparent)",
+                    WebkitMaskImage: "linear-gradient(to right, transparent, black 35%, black 65%, transparent)"
+                  }}
+                />
+              ))}
             </div>
           </>
         ) : fit === "full" || isTriptych ? (
@@ -278,21 +272,39 @@ export default function SitePreview() {
                 past the frame keeps the blur's own edges out of view, which is
                 where the hard bands were coming from.
               */
+              /*
+                Desaturated to near-grey on purpose. Sampling colour from the
+                photograph pulled skin tones into the wash, which is why the
+                ground came out pink. A neutral field is also the only thing a
+                cropped-in portrait can sit on without the two competing.
+              */
               style={{ objectPosition: heroOption.backdropFocus }}
-              className="scale-[1.9] object-cover blur-[90px] brightness-[1.15] saturate-[0.4]"
+              className="scale-[1.9] object-cover blur-[100px] grayscale brightness-[1.1] contrast-[0.9]"
             />
             {/* Bone laid over the wash, so the ground is unmistakably light and
                 any residual detail from the photograph cannot read through. */}
-            <div className="absolute inset-0 bg-[#20242c]/28" />
+            <div className="absolute inset-0 bg-[#2b2f36]/45" />
             <div className="absolute inset-0 flex justify-center">
               {/* Feathered left and right so the centre frame dissolves into
                   the wash instead of meeting it at a hard vertical cut. */}
               <div
                 className="relative h-full"
+                /*
+                  Feathered on all four edges rather than just left and right.
+                  The frame number and the signature sit in the top corners of
+                  the originals, and a corner is only carried away when both the
+                  horizontal and the vertical fade reach it.
+                */
                 style={{
                   aspectRatio: "4 / 5",
-                  maskImage: "linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%)",
-                  WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%)"
+                  maskImage:
+                    "linear-gradient(to right, transparent 0%, black 16%, black 84%, transparent 100%)," +
+                    "linear-gradient(to bottom, transparent 0%, black 15%, black 92%, transparent 100%)",
+                  WebkitMaskImage:
+                    "linear-gradient(to right, transparent 0%, black 16%, black 84%, transparent 100%)," +
+                    "linear-gradient(to bottom, transparent 0%, black 15%, black 92%, transparent 100%)",
+                  maskComposite: "intersect",
+                  WebkitMaskComposite: "source-in"
                 }}
               >
                 <Image
@@ -301,10 +313,6 @@ export default function SitePreview() {
                   sizes="(min-width: 768px) 62vh, 100vw"
                   className="object-contain"
                 />
-                {/* The frame numbers and the signature sit in the top corners
-                    of the originals. A short fade from the ground colour walks
-                    them out without cropping the photograph. */}
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[18%] bg-gradient-to-b from-[#3a3f47] via-[#3a3f47]/55 to-transparent" />
               </div>
             </div>
           </>
@@ -338,9 +346,17 @@ export default function SitePreview() {
             than the dark scrim the cropped fits need. Pair it with Ink type. */}
         <div
           className="absolute inset-0"
-          style={fit === "full"
-            ? { backgroundColor: "rgba(15,15,17,0.32)" }
-            : { backgroundColor: `rgba(15,15,17,${heroOption.scrim})` }}
+          /*
+            The triptych shows the same three photographs whichever hero is
+            selected, so its scrim is fixed. Reading heroOption.scrim here was
+            why switching between Adrian 3 and Cam 2 changed the brightness of
+            an image set that had not changed at all.
+          */
+          style={
+            isTriptych ? { backgroundColor: "rgba(15,15,17,0.34)" }
+            : fit === "full" ? { backgroundColor: "rgba(15,15,17,0.32)" }
+            : { backgroundColor: `rgba(15,15,17,${heroOption.scrim})` }
+          }
         />
         <div className="absolute inset-0 flex items-center">
           <div className="mx-auto w-full max-w-[1400px] px-6">
