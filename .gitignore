@@ -14,3 +14,7 @@ Thumbs.db
 
 # Local notes
 barber-booking_project_context.md
+
+# Test output
+playwright-report/
+test-results/

@@ -13,10 +13,17 @@ import * as SMTP from "./SMTP";                                       // SMTP Wo
 import * as Contacts from "./contacts";                               // Contacts Worker
 import { IContact } from "./contacts";                                // IContact type used in endpoint handlers
 import * as Appointments from "./Appointments";                       // Appointments Worker (Google Sheets)
+import * as Booking from "./Booking";                                 // Booking handler (validation, rate limits, the two emails)
 
 const app: Express = express();                                       // creates the Express application instance
 
-app.use(express.json());                                              // parses incoming JSON request bodies into JS objects
+/* Trust one layer of reverse proxy so req.ip is the caller's address rather
+   than the proxy's. The booking rate limiter keys off it. */
+app.set("trust proxy", 1);
+
+/* Cap the request body. The booking endpoint's own field limits add up to a
+   few KB; anything near this is not a real booking. */
+app.use(express.json({ limit: "64kb" }));                             // parses incoming JSON request bodies into JS objects
 
 app.use("/",
   express.static(path.join(__dirname, "../../client/dist"))
@@ -103,6 +110,14 @@ app.post("/messages", async (inRequest: Request, inResponse: Response) => {
     inResponse.send("error");
   }
 });
+
+/* POST /booking
+   Public endpoint behind the appointment form on the marketing site. Validates
+   every field, rate limits by IP, then sends the owner notification (which the
+   n8n Barber Log workflow parses into the Google Sheet) and a confirmation to
+   the client. The handler is built in Booking.ts so the end-to-end tests can
+   mount the same one with a recording mailer. */
+app.post("/booking", Booking.createBookingHandler(serverInfo));
 
 /* GET /appointments
    Returns a JSON array of booking requests from the Google Sheet that the
