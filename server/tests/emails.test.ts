@@ -128,8 +128,11 @@ describe.each([
     expect(email.html).toContain("max-width:600px");
   });
 
-  it("uses the site's brand color", () => {
-    expect(email.html).toContain("#00b9ff");
+  it("uses the site's palette", () => {
+    /* Dark cyan accent on the bone ground, matching the site rather than the
+       old saturated cyan the emails were originally built with. */
+    expect(email.html).toContain("#0b6f85");
+    expect(email.html).toContain("#f5f2ee");
   });
 
   it("escapes client-supplied values", () => {
