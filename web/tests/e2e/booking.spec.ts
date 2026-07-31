@@ -90,7 +90,9 @@ test("a booking dispatches both the owner notification and the client confirmati
   await page.getByRole("button", { name: "Submit" }).click();
 
   await expect(page.getByText("Request received")).toBeVisible();
-  await expect(page.getByText(`Thank you, ${CLIENT.name}!`)).toBeVisible();
+  /* Matches the name rather than the whole sentence, so rewording the
+     confirmation copy does not fail a test about dispatching email. */
+  await expect(page.getByText(new RegExp(`Thank you, ${CLIENT.name}`))).toBeVisible();
 
   const sent = await readOutbox(page);
   expect(sent).toHaveLength(2);
