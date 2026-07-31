@@ -113,7 +113,7 @@ npm run build
 npm run mcp        # or: node dist/mcp/main.js
 ```
 
-For Claude Code, `claude mcp add booking -- node C:/dev/barber-booking/server/dist/mcp/main.js`. For any client that takes JSON config:
+Most clients take a JSON config block. Point it at the compiled entry point with an absolute path:
 
 ```json
 {
