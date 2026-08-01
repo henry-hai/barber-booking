@@ -51,6 +51,20 @@ app.use(function(inRequest: Request, inResponse: Response, inNext: NextFunction)
   inResponse.header("Access-Control-Allow-Headers",                  // allow these request headers
     "Origin,X-Requested-With,Content-Type,Accept"
   );
+
+  /* Answer preflights here and go no further.
+
+     A browser sends OPTIONS before any cross-origin POST carrying JSON, and it
+     requires a 2xx back or it blocks the real request. Without this the
+     preflight for POST /booking falls past the route below, which only matches
+     POST, reaches the auth guard, and comes back 401. The booking form on the
+     marketing site then fails for every visitor while curl, which sends no
+     preflight, appears to work fine. */
+  if (inRequest.method === "OPTIONS") {
+    inResponse.sendStatus(204);
+    return;
+  }
+
   inNext();                                                           // passes control to the next middleware or endpoint
 });
 
