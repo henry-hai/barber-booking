@@ -87,12 +87,16 @@ describe("owner notification", () => {
     expect(notification.html).not.toContain("BOOKING_JSON");
   });
 
-  it("includes the client's email for replying, outside the payload", () => {
+  /* The email now appears in both places: in the readable parts so the owner
+     can see who to reply to, and inside the payload so it reaches column L and
+     the dashboard. It used to be excluded from the block deliberately. */
+  it("includes the client's email in the readable parts and the payload", () => {
     expect(notification.text).toContain("jordan@example.com");
     expect(notification.html).toContain("jordan@example.com");
+
     const block = notification.text
       .split("---BOOKING_JSON_START---")[1]?.split("---BOOKING_JSON_END---")[0] ?? "";
-    expect(block).not.toContain("jordan@example.com");
+    expect(JSON.parse(block).email).toBe("jordan@example.com");
   });
 
 });

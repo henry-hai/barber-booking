@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { IServerInfo } from "../src/ServerInfo";
 import { Worker as ResendWorker, readResendConfig } from "../src/ResendMailer";
 import { createMailer, parseBookingBlock, Worker as BookingWorker } from "../src/Booking";
-import { validBooking } from "./fixtures";
+import { COLUMN_KEYS, validBooking } from "./fixtures";
 
 const OWNER = "owner@example.com";
 const FROM = "Henry Hai Studio <bookings@henryhaistudio.com>";
@@ -129,11 +129,7 @@ describe("a booking sent through Resend", () => {
     const messages = await submit();
     const parsed = parseBookingBlock(messages[0].text);
 
-    expect(Object.keys(parsed)).toEqual([
-      "name", "date", "time", "phone",
-      "date1", "avail1", "date2", "avail2", "date3", "avail3",
-      "description"
-    ]);
+    expect(Object.keys(parsed)).toEqual(COLUMN_KEYS);
     expect(parsed.name).toBe(validBooking.name);
   });
 

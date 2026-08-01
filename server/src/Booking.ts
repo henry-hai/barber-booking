@@ -13,11 +13,18 @@
  * between two fixed sentinels. The n8n "Barber Log" workflow extracts the block
  * and runs a single JSON.parse on it.
  *
- * The eleven keys of IBookingPayload map one-to-one, in declaration order, onto
- * columns A..K of the booking sheet, and empty values are the string "N/A" --
+ * The twelve keys of IBookingPayload map one-to-one, in declaration order, onto
+ * columns A..L of the booking sheet, and empty values are the string "N/A" --
  * both of which server/src/Appointments.ts reads back. Do not reorder, rename,
- * add or remove keys, and do not change the "N/A" convention, without changing
- * the sheet and Appointments.ts to match.
+ * or remove keys, and do not change the "N/A" convention, without changing the
+ * sheet and Appointments.ts to match.
+ *
+ * A new key may be APPENDED. Doing so leaves every existing column untouched,
+ * so a sheet or workflow that has not been updated keeps working and simply
+ * sees an empty column. That is how `email` reached column L: it was collected
+ * from the start for the client confirmation, but lived only in the human
+ * readable parts of the notification, which left the dashboard unable to show
+ * the one field a client is actually reached by.
  *
  * The HTML part is for human reading only. Nothing downstream parses it, so it
  * can be redesigned freely without touching the pipeline.
@@ -60,7 +67,7 @@ export interface IBookingRequestBody {
   website?: unknown;
 }
 
-/* The eleven sheet columns, in column order. See THE SHEET CONTRACT above. */
+/* The twelve sheet columns, in column order. See THE SHEET CONTRACT above. */
 export interface IBookingPayload {
   name: string;        // A
   date: string;        // B  submitted date, America/Los_Angeles
@@ -73,6 +80,11 @@ export interface IBookingPayload {
   date3: string;       // I
   avail3: string;      // J
   description: string; // K
+  /* L. Added last, deliberately: appending leaves A..K byte-for-byte
+     unchanged, so a sheet, a workflow or a reader that has not been updated
+     yet keeps working and simply sees an empty column. Putting it anywhere
+     else would have shifted every column after it. */
+  email: string;       // L
 }
 
 /*
@@ -274,7 +286,8 @@ export function buildBookingPayload(
     avail2: orNA(booking.availability2),
     date3: orNA(booking.date3),
     avail3: orNA(booking.availability3),
-    description: orNA(booking.description)
+    description: orNA(booking.description),
+    email: orNA(booking.email)
   };
 }
 

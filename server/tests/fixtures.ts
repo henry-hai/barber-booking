@@ -6,11 +6,11 @@ export const SUBMITTED_AT = new Date("2026-08-01T19:30:00Z");
 export const SUBMITTED_DATE_LA = "8/1/2026";
 export const SUBMITTED_TIME_LA = "12:30 PM";
 
-/* Sheet columns A..K, in order. The order itself is the contract. */
+/* Sheet columns A..L, in order. The order itself is the contract. */
 export const COLUMN_KEYS = [
   "name", "date", "time", "phone",
   "date1", "avail1", "date2", "avail2", "date3", "avail3",
-  "description"
+  "description", "email"
 ];
 
 export const validBody = {

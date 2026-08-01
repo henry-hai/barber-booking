@@ -123,7 +123,7 @@ test("a booking dispatches both the owner notification and the client confirmati
   }
 });
 
-test("the owner notification carries a parseable sentinel block mapping to columns A..K", async ({ page }) => {
+test("the owner notification carries a parseable sentinel block mapping to columns A..L", async ({ page }) => {
   await fillBookingForm(page);
   await page.getByRole("button", { name: "Submit" }).click();
   await expect(page.getByText("Request received")).toBeVisible();
@@ -145,7 +145,7 @@ test("the owner notification carries a parseable sentinel block mapping to colum
   expect(Object.keys(payload)).toEqual([
     "name", "date", "time", "phone",
     "date1", "avail1", "date2", "avail2", "date3", "avail3",
-    "description"
+    "description", "email"
   ]);
 
   expect(payload.name).toBe(CLIENT.name);
@@ -155,9 +155,10 @@ test("the owner notification carries a parseable sentinel block mapping to colum
   expect(payload.date3).toBe(CLIENT.date3);
   expect(payload.description).toBe(CLIENT.description);
 
-  /* The client's email must not be in the payload: a twelfth key would break
-     the A..K mapping Appointments.ts reads. */
-  expect(payload).not.toHaveProperty("email");
+  /* The email is the twelfth key and lands in column L. Appending it leaves
+     A..K in place, which is why it could be added at all: an older sheet or
+     workflow sees an empty column rather than shifted data. */
+  expect(payload.email).toBe(CLIENT.email);
 
   /* The confirmation carries no machine-readable block. */
   const confirmation = sent.find((message) => message.to === CLIENT.email)!;
