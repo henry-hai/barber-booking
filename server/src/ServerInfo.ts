@@ -23,6 +23,13 @@ export interface IServerInfo {
     auth: { user: string, pass: string }
   },
   sheets?: {
+    /* The A1 range Appointments.ts asks Google for. It must reach at least as
+       far right as the last column the workflow writes, currently L.
+
+       Worth knowing because getting this wrong fails silently: a range of
+       A:K against a sheet holding twelve columns returns eleven, the reader
+       finds nothing at row[11], and the field simply never appears. Nothing
+       errors and no log mentions it. Widen this before adding a column. */
     spreadsheetId: string,
     range: string
   }
