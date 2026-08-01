@@ -11,6 +11,6 @@
   },
   "sheets": {
     "spreadsheetId": "your-google-sheet-id",
-    "range": "Sheet1!A:K"
+    "range": "Sheet1!A:L"
   }
 }

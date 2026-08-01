@@ -1,5 +1,5 @@
 /*
- * The A..K sheet contract, tested end to end.
+ * The A..L sheet contract, tested end to end.
  *
  * This reads the jsCode out of the committed n8n workflow export and runs it,
  * unmodified, against notification bodies this server actually produces. It is
@@ -63,7 +63,7 @@ describe("n8n workflow export", () => {
     expect(sheetsNode).toBeDefined();
   });
 
-  it("maps exactly eleven sheet columns", () => {
+  it("maps exactly twelve sheet columns", () => {
     expect(Object.keys(sheetsNode?.parameters.columns?.value ?? {})).toHaveLength(12);
   });
 
@@ -89,7 +89,7 @@ describe("n8n workflow export", () => {
 
 describe("the Code node against real notification emails", () => {
 
-  it("produces the eleven columns in A..K order", () => {
+  it("produces the twelve columns in A..L order", () => {
     const row = runCodeNode(notificationFor().gmail);
     expect(Object.keys(row)).toEqual(COLUMN_KEYS);
   });
@@ -168,6 +168,43 @@ describe("the Code node against real notification emails", () => {
   it("keeps the subject prefix the Gmail trigger filters on", () => {
     const { email } = notificationFor();
     expect(email.subject.startsWith("Appointment Request from")).toBe(true);
+  });
+
+});
+
+/*
+ * The range Appointments.ts asks Google for has to reach the last column the
+ * workflow writes. This is here because getting it wrong fails silently:
+ * requesting A:K from a sheet holding twelve columns returns eleven, the
+ * reader finds nothing at row[11], and the field never appears. No error, no
+ * log line, nothing to search for. The email column shipped with the config
+ * still pinned to A:K and looked, from the dashboard, exactly like a bug in
+ * the code.
+ */
+describe("the configured sheet range", () => {
+
+  /* "Sheet1!A:L" -> "L" */
+  const endColumn = (range: string): string =>
+    (range.split("!").pop() ?? "").split(":").pop() ?? "";
+
+  const columnNumber = (letter: string): number =>
+    letter.toUpperCase().charCodeAt(0) - 64;
+
+  it("reaches at least as far right as the last column written", () => {
+    const example = JSON.parse(fs.readFileSync(
+      path.join(__dirname, "../serverInfo.example.json"), "utf8"
+    ));
+
+    const end = endColumn(example.sheets.range);
+    expect(columnNumber(end)).toBeGreaterThanOrEqual(COLUMN_KEYS.length);
+  });
+
+  /* Guards the arithmetic above, so a broken helper cannot make the real
+     assertion pass by accident. */
+  it("reads the end column out of an A1 range", () => {
+    expect(endColumn("Sheet1!A:L")).toBe("L");
+    expect(columnNumber("A")).toBe(1);
+    expect(columnNumber("L")).toBe(12);
   });
 
 });
