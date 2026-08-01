@@ -12,12 +12,13 @@ The earlier hand-rolled static version is still up on GitHub Pages from a separa
 
 - **Previous site:** [henry-hai.github.io/barber_website/](https://henry-hai.github.io/barber_website/) ([source](https://github.com/henry-hai/barber_website))
 
-![Landing page with hero image and navigation](screenshots/01-hero.jpg)
+![Landing page with the triptych hero and navigation](screenshots/01-hero.jpg)
 ![Services and pricing list](screenshots/02-services.jpg)
-![Gallery carousel of haircut work](screenshots/03-gallery.jpg)
-![Locations section with Irvine and Milpitas shops](screenshots/04-locations.jpg)
-![Booking policies and appointment request form](screenshots/05-booking-form.jpg)
-![Rest of the booking form with submit and footer](screenshots/06-booking-form-footer.jpg)
+![Tabbed gallery of haircut work](screenshots/03-gallery.jpg)
+![Locations section with Milpitas and Irvine shops](screenshots/04-locations.jpg)
+![Appointment request form with three preferred slots](screenshots/05-booking-form.jpg)
+![Booking policies, submit and footer](screenshots/06-booking-form-footer.jpg)
+![Confirmation shown after a booking is accepted](screenshots/07-confirmation.jpg)
 
 ## Appointments Dashboard
 
