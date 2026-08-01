@@ -1,13 +1,26 @@
 /*
- * Entry point for the Express server. Sets up middleware and
- * defines all REST endpoints. Each endpoint instantiates the
- * appropriate Worker and delegates the real work to it.
- * Start the server: node dist/main.js
+ * The Express server. Sets up middleware and defines all REST endpoints.
+ * Each endpoint instantiates the appropriate Worker and delegates the real
+ * work to it.
+ *
+ * Start the server through boot.ts, not this file: node dist/boot.js. That
+ * puts the credential files in place before the ServerInfo import below reads
+ * them.
+ *
+ * TWO ZONES
+ * ---------
+ * Public: POST /booking, and the health check the host polls. The marketing
+ * site posts to /booking from another origin, so it stays open and CORS-wide.
+ *
+ * Private: everything else, behind HTTP basic auth from Auth.ts. That covers
+ * the dashboard bundle, GET /appointments and the mail and contacts routes,
+ * all of which expose client details.
  */
 
 import path from "path";                                              // Node built-in: constructs file paths
 import express, { Express, NextFunction, Request, Response } from "express"; // Express app and its TypeScript types
 import { serverInfo } from "./ServerInfo";                            // parsed Gmail credentials
+import { createDashboardAuth } from "./Auth";                         // basic-auth guard for the dashboard
 import * as IMAP from "./IMAP";                                       // IMAP Worker + interfaces
 import * as SMTP from "./SMTP";                                       // SMTP Worker
 import * as Contacts from "./contacts";                               // Contacts Worker
@@ -18,19 +31,18 @@ import * as Booking from "./Booking";                                 // Booking
 const app: Express = express();                                       // creates the Express application instance
 
 /* Trust one layer of reverse proxy so req.ip is the caller's address rather
-   than the proxy's. The booking rate limiter keys off it. */
+   than the proxy's. The booking rate limiter keys off it, and on a managed
+   host every request arrives through the platform's proxy. */
 app.set("trust proxy", 1);
 
 /* Cap the request body. The booking endpoint's own field limits add up to a
    few KB; anything near this is not a real booking. */
 app.use(express.json({ limit: "64kb" }));                             // parses incoming JSON request bodies into JS objects
 
-app.use("/",
-  express.static(path.join(__dirname, "../../client/dist"))
-);
-
 /* CORS middleware: runs on every request before any endpoint handler.
-   Sets headers that tell the browser to allow cross-origin requests. */
+   Sets headers that tell the browser to allow cross-origin requests. This is
+   registered ahead of everything so the headers are present on static
+   responses and on the preflight the booking form triggers. */
 app.use(function(inRequest: Request, inResponse: Response, inNext: NextFunction) {
   inResponse.header("Access-Control-Allow-Origin", "*");             // allow requests from any origin
   inResponse.header("Access-Control-Allow-Methods",                  // allow these HTTP methods
@@ -41,6 +53,39 @@ app.use(function(inRequest: Request, inResponse: Response, inNext: NextFunction)
   );
   inNext();                                                           // passes control to the next middleware or endpoint
 });
+
+/* GET /healthz
+   Unauthenticated so the host's health check can reach it. Reports nothing
+   beyond liveness. */
+app.get("/healthz", (inRequest: Request, inResponse: Response) => {
+  inResponse.json({ ok: true });
+});
+
+/* POST /booking
+   Public endpoint behind the appointment form on the marketing site. Validates
+   every field, rate limits by IP, then sends the owner notification (which the
+   n8n Barber Log workflow parses into the Google Sheet) and a confirmation to
+   the client. The handler is built in Booking.ts so the end-to-end tests can
+   mount the same one with a recording mailer.
+
+   Registered ahead of the auth guard on purpose. It is called cross-origin by
+   a browser that has no credentials to offer, so guarding it would break the
+   live booking path. Its own honeypot and rate limits are what protect it. */
+app.post("/booking", Booking.createBookingHandler(serverInfo));
+
+/*
+ * Everything below this line is private.
+ *
+ * The guard answers 401 unless the request carries the basic-auth credentials
+ * from DASHBOARD_USER and DASHBOARD_PASSWORD, and 503 if the host never set
+ * them. It is registered before the static middleware so the dashboard bundle
+ * is covered too, not just the JSON endpoints it calls.
+ */
+app.use(createDashboardAuth());
+
+app.use("/",
+  express.static(path.join(__dirname, "../../client/dist"))
+);
 
 /* GET /mailboxes
    Returns a JSON array of all mailbox names and paths in the account. */
@@ -111,14 +156,6 @@ app.post("/messages", async (inRequest: Request, inResponse: Response) => {
   }
 });
 
-/* POST /booking
-   Public endpoint behind the appointment form on the marketing site. Validates
-   every field, rate limits by IP, then sends the owner notification (which the
-   n8n Barber Log workflow parses into the Google Sheet) and a confirmation to
-   the client. The handler is built in Booking.ts so the end-to-end tests can
-   mount the same one with a recording mailer. */
-app.post("/booking", Booking.createBookingHandler(serverInfo));
-
 /* GET /appointments
    Returns a JSON array of booking requests from the Google Sheet that the
    n8n Barber Log workflow writes to. Returns [] if sheets is unconfigured. */
@@ -172,6 +209,10 @@ app.delete("/contacts/:id", async (inRequest: Request, inResponse: Response) => 
   }
 });
 
-app.listen(8080, () => {                                              // starts the server on port 8080
-  console.log("Server listening on port 8080");
+/* Managed hosts assign the port and pass it in; 8080 is the local default the
+   client config and the README both already point at. */
+const port: number = Number(process.env.PORT ?? 8080);
+
+app.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
 });
