@@ -107,8 +107,13 @@ export default function Hero() {
           <Reveal delay={260}>
             {/* Hover thickens the rule and turns it cyan. Darkening the label
                 instead would make it unreadable against the photographs. */}
+            {/* The booking section's DOM id is "s-book", not "book": Section
+                in page.tsx prefixes every id with "s-". The header nav, the
+                mobile menu and the section index all build their hrefs from
+                that prefix; this one was written by hand and matched nothing,
+                so the button did nothing when clicked. */}
             <a
-              href="#book"
+              href="#s-book"
               className="group mt-10 inline-block font-mono text-[12px] uppercase tracking-[0.2em] text-white"
               style={{ textShadow: TYPE_HALO }}
             >
