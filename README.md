@@ -21,6 +21,15 @@ The earlier hand-rolled static version is still up on GitHub Pages from a separa
 ![Booking policies, submit and footer](screenshots/07-booking-form-footer.jpg)
 ![Confirmation shown after a booking is accepted](screenshots/08-confirmation.jpg)
 
+### On a phone
+
+The hero is a triptych on desktop and a single frame on mobile, rather than the same three photographs shrunk to fit. Navigation collapses into a full-screen menu carrying the same numbered index as the desktop sidebar.
+
+<p>
+  <img src="screenshots/09-mobile-hero.jpg" alt="Hero on a phone, a single frame rather than the desktop triptych" width="46%">
+  <img src="screenshots/10-mobile-menu.jpg" alt="Full-screen navigation menu on a phone" width="46%">
+</p>
+
 ## Appointments Dashboard
 
 A React dashboard reads booking requests **live** from the Google Sheet that the n8n workflow appends to, using the Google Sheets API authenticated with a read-only GCP service account. It shows headline stats and a card per request (client name, submitted time, preferred slots, and notes). The booking data stays in Google Sheets as the single source of truth, viewable on a phone, while the dashboard surfaces it inside the app. *(Client phone numbers and last names redacted below.)*
