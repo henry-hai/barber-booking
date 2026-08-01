@@ -28,6 +28,8 @@ import { SendMailOptions } from "nodemailer";
 import { IServerInfo } from "./ServerInfo";
 import * as SMTP from "./SMTP";
 import { RateLimiter } from "./RateLimit";
+import * as ResendMailer from "./ResendMailer";
+import { readResendConfig } from "./ResendMailer";
 import {
   renderClientConfirmation,
   renderOwnerNotification
@@ -309,15 +311,39 @@ export interface IMailer {
   sendMessage(options: SendMailOptions): Promise<string>;
 }
 
+/*
+ * Picks the transport for a given environment.
+ *
+ * Resend when RESEND_API_KEY and MAIL_FROM are both set, SMTP otherwise.
+ * That split is not a preference, it is a deployment constraint: Render's free
+ * tier blocks the SMTP ports, so the deployed API has to send over HTTPS,
+ * while a development machine can talk to Gmail directly and needs no account
+ * anywhere. Both satisfy IMailer, so everything downstream is identical.
+ *
+ * Deliberately not memoised. A booking is infrequent enough that building a
+ * transport per request costs nothing, and it keeps the choice readable.
+ */
+export function createMailer(
+  inServerInfo: IServerInfo,
+  env: NodeJS.ProcessEnv = process.env
+): IMailer {
+  const resend = readResendConfig(env);
+  return resend === undefined
+    ? new SMTP.Worker(inServerInfo)
+    : new ResendMailer.Worker(resend);
+}
+
 export class Worker {
 
   private mailer: IMailer;
   private ownerAddress: string;
 
   /* Owner notifications go to the same Gmail account that sends them, which is
-     the mailbox the n8n Gmail trigger polls. */
+     the mailbox the n8n Gmail trigger polls. Note that the sender may be a
+     different address entirely when sending through Resend; the trigger
+     filters on the subject prefix, not the sender, so that does not matter. */
   constructor(inServerInfo: IServerInfo, inMailer?: IMailer) {
-    this.mailer = inMailer ?? new SMTP.Worker(inServerInfo);
+    this.mailer = inMailer ?? createMailer(inServerInfo);
     this.ownerAddress = inServerInfo.smtp.auth.user;
   }
 
