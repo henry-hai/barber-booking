@@ -6,18 +6,29 @@ A full-stack barbering booking platform serving 300+ clients, built with Next.js
 
 The customer-facing site is a statically generated Next.js app in `web/`, deployed on **Vercel**:
 
-- **Live site:** [henryhaistudio.vercel.app](https://henryhaistudio.vercel.app)
+- **Live site:** [henryhaistudio.com](https://henryhaistudio.com)
 
 The earlier hand-rolled static version is still up on GitHub Pages from a separate repo. It is the one currently serving clients, and it is unrelated to this codebase:
 
 - **Previous site:** [henry-hai.github.io/barber_website/](https://henry-hai.github.io/barber_website/) ([source](https://github.com/henry-hai/barber_website))
 
-![Landing page with hero image and navigation](screenshots/01-hero.jpg)
-![Services and pricing list](screenshots/02-services.jpg)
-![Gallery carousel of haircut work](screenshots/03-gallery.jpg)
-![Locations section with Irvine and Milpitas shops](screenshots/04-locations.jpg)
-![Booking policies and appointment request form](screenshots/05-booking-form.jpg)
-![Rest of the booking form with submit and footer](screenshots/06-booking-form-footer.jpg)
+![Landing page with the triptych hero and navigation](screenshots/01-hero.jpg)
+![About section listing years cutting, locations and photography](screenshots/02-about.jpg)
+![Services and pricing list](screenshots/03-services.jpg)
+![Tabbed gallery of haircut work](screenshots/04-gallery.jpg)
+![Locations section with the Milpitas and Irvine shops](screenshots/05-locations.jpg)
+![Appointment request form with three preferred slots](screenshots/06-booking-form.jpg)
+![Booking policies, submit and footer](screenshots/07-booking-form-footer.jpg)
+![Confirmation shown after a booking is accepted](screenshots/08-confirmation.jpg)
+
+### On a phone
+
+The hero is a triptych on desktop and a single frame on mobile, rather than the same three photographs shrunk to fit. Navigation collapses into a full-screen menu carrying the same numbered index as the desktop sidebar.
+
+<p>
+  <img src="screenshots/09-mobile-hero.jpg" alt="Hero on a phone, a single frame rather than the desktop triptych" width="46%">
+  <img src="screenshots/10-mobile-menu.jpg" alt="Full-screen navigation menu on a phone" width="46%">
+</p>
 
 ## Appointments Dashboard
 
@@ -34,7 +45,7 @@ Browser  -->  Next.js site (web/) on Vercel
               Marketing pages, gallery, booking form
                     |
                     v
-              POST /booking  -->  Express API (server/) on Render  -->  Gmail SMTP
+              POST /booking  -->  Express API (server/) on Render  -->  Resend (HTTPS)
                                                                           |
                                         +-- confirmation email to the client
                                         |
@@ -65,7 +76,7 @@ The repo also carries a Gmail mail client -- mailboxes, messages and NeDB-backed
 A booking travels through four hops, and the contract between them is deliberately narrow.
 
 1. The form in `web/components/BookingForm.tsx` POSTs JSON to `POST /booking`.
-2. `server/src/Booking.ts` revalidates every field, then sends two emails.
+2. `server/src/Booking.ts` revalidates every field, then sends two emails, over Resend's HTTPS API in production and Gmail SMTP locally. See [Why the email goes over HTTPS](#why-the-email-goes-over-https).
 3. The **owner notification**'s plain-text part carries an 11-field JSON object between two fixed sentinels:
 
    ```
@@ -84,6 +95,18 @@ Two consequences worth knowing:
 - **The key order and the `"N/A"` convention are load-bearing.** Changing either means changing the sheet and `Appointments.ts` together. `server/tests/n8n-contract.test.ts` runs the workflow's own `jsCode` against real notification bodies to catch drift.
 
 The Gmail trigger filters on the subject prefix `Appointment Request from`, so that must stay too.
+
+### Why the email goes over HTTPS
+
+The deployed API sends through **Resend's HTTPS API** rather than SMTP, and that is a deployment constraint rather than a preference.
+
+Render's free tier blocks outbound connections on the SMTP ports (25, 465 and 587) as an anti-spam measure. The failure is quiet and confusing: the same code sends fine from a development machine, and on Render it hangs until the socket times out. The logs show `ETIMEDOUT` on `CONN` to `smtp.gmail.com:465`. No client configuration opens a closed port.
+
+`server/src/ResendMailer.ts` implements the same `IMailer` interface as the SMTP worker, and `createMailer` picks between them: Resend when `RESEND_API_KEY` and `MAIL_FROM` are set, SMTP otherwise. A development machine therefore needs no account anywhere, and `Booking.Worker` cannot tell the two apart.
+
+**The pipeline does not notice.** The owner notification keeps the `Appointment Request from` subject prefix, keeps the sentinel-wrapped A..K block, and still arrives in the mailbox the n8n Gmail trigger polls. That trigger matches on subject rather than sender, which is what makes the transport swappable.
+
+One diagnosis worth recording, because it looked like the same bug and was not: before the port block was identified, sends were failing with `ENETUNREACH` on an IPv6 address. Render's containers have no IPv6 route, and Node was resolving `smtp.gmail.com` to its AAAA record. `family: 4` in `SMTP.ts` pins the connection to IPv4 and fixed that, which is what made the underlying port block visible.
 
 ## MCP server
 
@@ -145,7 +168,8 @@ Credentials come from `server/serverInfo.json` and `server/serviceAccount.json`,
 | TypeScript | Site, server API, and React client |
 | Tailwind CSS | Responsive utility-first styling |
 | Material-UI | React component library (`client/`) |
-| NodeMailer | Gmail SMTP: booking emails and the mail client |
+| Resend | Booking email over HTTPS, from a verified `henryhaistudio.com` sender |
+| NodeMailer | Gmail SMTP: the local fallback and the retired mail client |
 | imapflow | Inbound email over Gmail IMAP |
 | NeDB | Embedded document database for contacts |
 | Axios | HTTP client for API communication |
@@ -214,7 +238,9 @@ npm test           # web + server unit tests
 npm run test:e2e   # Playwright booking path
 ```
 
-Everything runs with no secrets. The end-to-end suite mounts the real booking handler with a recording mailer in place of NodeMailer, and the MCP tests stub the Sheets client alongside it, so no test reaches Gmail, Sheets or n8n. CI runs all three suites on every push and pull request.
+**123 server tests, 38 web tests, 6 Playwright.** Everything runs with no secrets: the end-to-end suite mounts the real booking handler with a recording mailer, the MCP tests stub the Sheets client, and the Resend tests stub `fetch`. No test reaches Gmail, Resend, Sheets or n8n. CI runs all three suites on every push and pull request.
+
+Several of them exist because a bug reached production first, and each says so in its own header: `cors.test.ts` for the preflight that returned 401, `anchors.test.tsx` for the hero link that pointed at nothing, and the contract tests inside `resend.test.ts` for the sheet layout surviving a change of email transport.
 
 ## Deployment
 
@@ -229,7 +255,7 @@ Project `henryhaistudio`, **Root Directory `web`**. Set under *Project Settings 
 | Variable | Value |
 |---|---|
 | `NEXT_PUBLIC_API_BASE_URL` | Origin of the Render service, no trailing slash |
-| `NEXT_PUBLIC_SITE_URL` | `https://henryhaistudio.vercel.app` |
+| `NEXT_PUBLIC_SITE_URL` | `https://henryhaistudio.com` |
 
 Both are inlined into the bundle at build time, so **changing either one needs a redeploy** to take effect. `NEXT_PUBLIC_SITE_URL` is not cosmetic: `og:url`, `sitemap.xml` and `robots.txt` all derive from it, and its default is a domain that does not serve this site.
 
@@ -245,6 +271,10 @@ Set under *Dashboard -> the service -> Environment*:
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | Entire contents of `serviceAccount.json`, as one line |
 | `DASHBOARD_USER` | Whatever username you want for the dashboard |
 | `DASHBOARD_PASSWORD` | **The dashboard password. This is where you set it.** |
+| `RESEND_API_KEY` | Resend key with sending access |
+| `MAIL_FROM` | Verified sender, e.g. `Henry Hai Studio <bookings@henryhaistudio.com>` |
+
+The last two are what move booking email off SMTP. Leave them unset and the server falls back to SMTP, which is correct locally and fails on Render. The sender's domain must be verified in Resend, which means three DNS records: an SPF `TXT`, a DKIM `TXT`, and an `MX` for bounces, all on subdomains that leave the site's own records alone.
 
 `Credentials.ts` writes the first two to the paths the server expects at startup, so `Appointments.ts` goes on handing a key file to `GoogleAuth` unchanged. A real file on disk always wins, so this is inert locally.
 
@@ -330,7 +360,8 @@ barber-booking/
 │   │   ├── BookingEmails.ts# HTML and plain-text email templates
 │   │   ├── RateLimit.ts    # In-memory rate limiter
 │   │   ├── Appointments.ts # Google Sheets reader (service account)
-│   │   ├── SMTP.ts         # NodeMailer email sending
+│   │   ├── ResendMailer.ts # Booking email over HTTPS (production)
+│   │   ├── SMTP.ts         # NodeMailer email sending (local fallback)
 │   │   ├── IMAP.ts         # IMAP email reading (mail client, unwired)
 │   │   ├── contacts.ts     # NeDB contact CRUD (mail client, unwired)
 │   │   ├── ServerInfo.ts   # Config loader
@@ -344,6 +375,8 @@ barber-booking/
 │   │   ├── n8n-contract.test.ts
 │   │   ├── ratelimit.test.ts
 │   │   ├── auth.test.ts
+│   │   ├── cors.test.ts
+│   │   ├── resend.test.ts
 │   │   ├── mcp.test.ts
 │   │   └── e2e-harness.mjs # Real booking handler + recording mailer
 │   ├── package.json
