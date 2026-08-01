@@ -38,6 +38,18 @@ const field =
   "w-full border-b border-neutral-400 bg-transparent pb-2.5 pt-1 text-[15px] text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-neutral-900";
 const labelClass = "font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-600";
 
+/* Marks a field the server will reject if left empty.
+ *
+ * The form used to label only what was optional, which meant a client
+ * discovered the required ones by being turned away after submitting.
+ *
+ * aria-hidden on the glyph, with the requirement carried by aria-required on
+ * the input instead: a screen reader announcing "asterisk" is noise, while
+ * "required" is the actual information. */
+function Required() {
+  return <span aria-hidden="true" className="text-neutral-400"> *</span>;
+}
+
 function FieldError({ message }: { message?: string }) {
   if (!message) { return null; }
   return <p role="alert" className="mt-2 text-[13px] text-red-700">{message}</p>;
@@ -115,11 +127,17 @@ export default function BookingForm() {
 
   return (
     <form id="appointment-form" onSubmit={handleSubmit} noValidate className="space-y-10">
+      {/* A bare asterisk means nothing on its own, so say what it marks. */}
+      <p className="text-[13px] text-neutral-500">
+        Fields marked <span aria-hidden="true">*</span> are required.
+      </p>
+
       <div className="grid gap-8 sm:grid-cols-3">
         <div>
-          <label htmlFor="name" className={labelClass}>Name</label>
+          <label htmlFor="name" className={labelClass}>Name<Required /></label>
           <input
             type="text" id="name" name="name" className={`${field} mt-2`}
+            aria-required="true"
             maxLength={limits.name}
             autoComplete="name"
             value={form.name}
@@ -129,9 +147,10 @@ export default function BookingForm() {
         </div>
 
         <div>
-          <label htmlFor="email" className={labelClass}>Email</label>
+          <label htmlFor="email" className={labelClass}>Email<Required /></label>
           <input
             type="email" id="email" name="email" className={`${field} mt-2`}
+            aria-required="true"
             maxLength={limits.email}
             autoComplete="email"
             value={form.email}
@@ -142,9 +161,10 @@ export default function BookingForm() {
         </div>
 
         <div>
-          <label htmlFor="phone" className={labelClass}>Phone Number</label>
+          <label htmlFor="phone" className={labelClass}>Phone Number<Required /></label>
           <input
             type="tel" id="phone" name="phone" className={`${field} mt-2`}
+            aria-required="true"
             maxLength={limits.phone}
             autoComplete="tel"
             value={form.phone}
@@ -168,7 +188,7 @@ export default function BookingForm() {
             <div className="grid gap-8 sm:grid-cols-3" key={dateKey}>
               <div>
                 <label htmlFor={dateKey} className={labelClass}>
-                  Preferred Date {index}{optional}
+                  Preferred Date {index}{optional}{index === 1 && <Required />}
                 </label>
                 <input
                   type="date" id={dateKey} name={dateKey} className={`${field} mt-2`}
@@ -179,7 +199,9 @@ export default function BookingForm() {
               </div>
 
               <div className="sm:col-span-2">
-                <label htmlFor={availabilityKey} className={labelClass}>Availability</label>
+                <label htmlFor={availabilityKey} className={labelClass}>
+                  Availability{index === 1 && <Required />}
+                </label>
                 <input
                   type="text" id={availabilityKey} name={availabilityKey}
                   className={`${field} mt-2`}
@@ -197,7 +219,7 @@ export default function BookingForm() {
 
       <div>
         <label htmlFor="description" className={labelClass}>
-          Description of Haircut / Other Comments
+          Description of Haircut / Other Comments<Required />
         </label>
         <textarea
           id="description" name="description" rows={3}
@@ -224,11 +246,12 @@ export default function BookingForm() {
           <input
             type="checkbox" name="policiesAccepted"
             className="h-4 w-4 accent-neutral-900"
+            aria-required="true"
             checked={form.policiesAccepted}
             onChange={(event) => update("policiesAccepted", event.target.checked)}
           />
           <span className="ml-3 text-[14px] text-neutral-800">
-            I accept the booking policies
+            I accept the booking policies<Required />
           </span>
         </label>
         <FieldError message={errors.policiesAccepted} />

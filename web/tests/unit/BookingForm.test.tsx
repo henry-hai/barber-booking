@@ -15,16 +15,16 @@ async function fillRequiredFields(user: ReturnType<typeof userEvent.setup>) {
     description: "Mid fade, scissor top"
   };
 
-  await user.type(screen.getByLabelText("Name"), values.name);
-  await user.type(screen.getByLabelText("Email"), values.email);
-  await user.type(screen.getByLabelText("Phone Number"), values.phone);
-  await user.type(screen.getByLabelText("Preferred Date 1"), values.date1);
-  await user.type(screen.getAllByLabelText("Availability")[0], values.availability1);
+  await user.type(screen.getByLabelText("Name", { exact: false }), values.name);
+  await user.type(screen.getByLabelText("Email", { exact: false }), values.email);
+  await user.type(screen.getByLabelText("Phone Number", { exact: false }), values.phone);
+  await user.type(screen.getByLabelText("Preferred Date 1", { exact: false }), values.date1);
+  await user.type(screen.getAllByLabelText("Availability", { exact: false })[0], values.availability1);
   await user.type(
-    screen.getByLabelText("Description of Haircut / Other Comments"),
+    screen.getByLabelText("Description of Haircut / Other Comments", { exact: false }),
     values.description
   );
-  await user.click(screen.getByLabelText("I accept the booking policies"));
+  await user.click(screen.getByLabelText("I accept the booking policies", { exact: false }));
 
   return values;
 }
@@ -47,10 +47,10 @@ describe("BookingForm", () => {
 
   it("renders all three preferred date slots", () => {
     render(<BookingForm />);
-    expect(screen.getByLabelText("Preferred Date 1")).toBeInTheDocument();
+    expect(screen.getByLabelText("Preferred Date 1", { exact: false })).toBeInTheDocument();
     expect(screen.getByLabelText("Preferred Date 2 (Optional)")).toBeInTheDocument();
     expect(screen.getByLabelText("Preferred Date 3 (Optional)")).toBeInTheDocument();
-    expect(screen.getAllByLabelText("Availability")).toHaveLength(3);
+    expect(screen.getAllByLabelText("Availability", { exact: false })).toHaveLength(3);
   });
 
   it("shows inline errors and sends nothing when the form is empty", async () => {
@@ -71,7 +71,7 @@ describe("BookingForm", () => {
     await submit(user);
     expect(await screen.findByText("Please enter your name.")).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText("Name"), "Jordan");
+    await user.type(screen.getByLabelText("Name", { exact: false }), "Jordan");
     await waitFor(() =>
       expect(screen.queryByText("Please enter your name.")).not.toBeInTheDocument()
     );
@@ -82,8 +82,8 @@ describe("BookingForm", () => {
     render(<BookingForm />);
 
     await fillRequiredFields(user);
-    await user.clear(screen.getByLabelText("Email"));
-    await user.type(screen.getByLabelText("Email"), "not-an-email");
+    await user.clear(screen.getByLabelText("Email", { exact: false }));
+    await user.type(screen.getByLabelText("Email", { exact: false }), "not-an-email");
     await submit(user);
 
     expect(await screen.findByText("Please enter a valid email address."))
@@ -162,7 +162,7 @@ describe("BookingForm", () => {
     await submit(user);
 
     expect(await screen.findByText("Network down")).toBeInTheDocument();
-    expect(screen.getByLabelText("Name")).toHaveValue("Jordan Reyes");
+    expect(screen.getByLabelText("Name", { exact: false })).toHaveValue("Jordan Reyes");
   });
 
 });
