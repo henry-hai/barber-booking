@@ -19,7 +19,10 @@ export interface IBookingRequest {
   submittedTime: string,
   phone: string,
   preferred: IPreferredSlot[],
-  notes: string
+  notes: string,
+  /* Column L, appended after A..K were already in use. Rows written before it
+     existed have nothing there, so this is "" for them rather than missing. */
+  email: string
 }
 
 /* Service account key file. Gitignored; the user drops their downloaded
@@ -61,8 +64,10 @@ export class Worker {
     const rows: any[][] = response.data.values || [];
     if (rows.length <= 1) { return []; }
 
-    /* Row 0 is the header; map the rest by the fixed 11-column order the
-       Barber Log workflow writes (A..K). */
+    /* Row 0 is the header; map the rest by the fixed 12-column order the
+       Barber Log workflow writes (A..L). Sheets truncates trailing empty
+       cells, so a row written before column L existed simply has no index 11
+       and clean() turns that into "". */
     const requests: IBookingRequest[] = rows.slice(1).map((row) => {
       const preferred: IPreferredSlot[] = [
         { date: clean(row[4]), availability: clean(row[5]) },
@@ -76,7 +81,8 @@ export class Worker {
         submittedTime: clean(row[2]),
         phone: clean(row[3]),
         preferred: preferred,
-        notes: clean(row[10])
+        notes: clean(row[10]),
+        email: clean(row[11])
       };
     });
 

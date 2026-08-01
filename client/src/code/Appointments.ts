@@ -12,7 +12,10 @@ export interface IBookingRequest {
   submittedTime: string,
   phone: string,
   preferred: IPreferredSlot[],
-  notes: string
+  notes: string,
+  /* Column L, appended after A..K were in use. Empty for rows written before
+     that column existed. */
+  email: string
 }
 
 export class Worker {

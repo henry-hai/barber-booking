@@ -64,7 +64,7 @@ describe("n8n workflow export", () => {
   });
 
   it("maps exactly eleven sheet columns", () => {
-    expect(Object.keys(sheetsNode?.parameters.columns?.value ?? {})).toHaveLength(11);
+    expect(Object.keys(sheetsNode?.parameters.columns?.value ?? {})).toHaveLength(12);
   });
 
   it("parses with one JSON.parse and no label anchors", () => {

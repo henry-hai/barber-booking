@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
 import EventIcon from "@mui/icons-material/Event";
 import PhoneIcon from "@mui/icons-material/Phone";
+import EmailIcon from "@mui/icons-material/Email";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import * as Appointments from "../Appointments";
 
@@ -99,6 +100,15 @@ const Dashboard = () => {
                 <div className="reqPhone">
                   <PhoneIcon fontSize="inherit" style={{ marginRight: 6 }} />
                   <a href={ `tel:${r.phone}` }>{ r.phone }</a>
+                </div>
+              }
+
+              {/* Column L. Rows written before that column existed have no
+                  email, so this is absent rather than blank for them. */}
+              { r.email &&
+                <div className="reqPhone">
+                  <EmailIcon fontSize="inherit" style={{ marginRight: 6 }} />
+                  <a href={ `mailto:${r.email}` }>{ r.email }</a>
                 </div>
               }
 

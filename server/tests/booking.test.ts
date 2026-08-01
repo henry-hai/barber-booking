@@ -156,7 +156,8 @@ describe("buildBookingPayload", () => {
       avail2: "Mornings only",
       date3: "2026-08-09",
       avail3: "Any time Saturday",
-      description: "Mid fade, scissor top, beard line-up"
+      description: "Mid fade, scissor top, beard line-up",
+      email: "jordan@example.com"
     });
   });
 
@@ -179,11 +180,31 @@ describe("buildBookingPayload", () => {
     expect(payload.date3).toBe("2026-08-09");
   });
 
-  it("never puts the email address in the payload", () => {
-    /* A twelfth key would break the A..K mapping. */
+  /* The email used to be kept out of the payload entirely, on the reasoning
+     that a twelfth key would break the A..K mapping. Appending one does not:
+     A..K keep their positions and the new key lands in L, so a sheet or
+     workflow that has not been updated sees an empty column rather than
+     shifted data. Leaving it out had cost the dashboard the one field a
+     client is actually reached by. */
+  it("puts the email last, so A..K keep their columns", () => {
     const payload = buildBookingPayload(validBooking, SUBMITTED_AT);
-    expect(Object.values(payload)).not.toContain(validBooking.email);
-    expect(payload).not.toHaveProperty("email");
+    const keys = Object.keys(payload);
+
+    expect(keys[keys.length - 1]).toBe("email");
+    expect(payload.email).toBe(validBooking.email);
+    /* The first eleven are untouched, in order. */
+    expect(keys.slice(0, 11)).toEqual([
+      "name", "date", "time", "phone",
+      "date1", "avail1", "date2", "avail2", "date3", "avail3",
+      "description"
+    ]);
+  });
+
+  it("writes N/A when no email reaches it", () => {
+    const payload = buildBookingPayload(
+      { ...validBooking, email: "" }, SUBMITTED_AT
+    );
+    expect(payload.email).toBe(NA);
   });
 
 });

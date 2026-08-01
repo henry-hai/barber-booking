@@ -17,7 +17,7 @@ import { IBookingRequest } from "../src/Appointments";
 import { JSON_START, JSON_END, parseBookingBlock } from "../src/Booking";
 import { BookingTools, IAppointmentsReader } from "../src/mcp/BookingTools";
 import { createMcpServer } from "../src/mcp/server";
-import { validBody } from "./fixtures";
+import { COLUMN_KEYS, validBody } from "./fixtures";
 
 const OWNER = "owner@example.com";
 
@@ -158,11 +158,7 @@ describe("request_booking", () => {
     expect(text).toContain(JSON_END);
 
     const parsed = parseBookingBlock(text);
-    expect(Object.keys(parsed)).toEqual([
-      "name", "date", "time", "phone",
-      "date1", "avail1", "date2", "avail2", "date3", "avail3",
-      "description"
-    ]);
+    expect(Object.keys(parsed)).toEqual(COLUMN_KEYS);
     expect(parsed.name).toBe(validBody.name);
     expect(parsed.date1).toBe(validBody.date1);
   });
