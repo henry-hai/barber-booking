@@ -19,7 +19,7 @@
 import { useState } from "react";
 import { bookingEndpoint } from "@/lib/api";
 import { SERIF } from "@/lib/fonts";
-import { bookingPolicies } from "@/lib/site";
+import { bookingPolicies, site } from "@/lib/site";
 import {
   emptyBookingForm,
   limits,
@@ -33,6 +33,23 @@ type SubmitState =
   | { status: "sending" }
   | { status: "sent"; name: string }
   | { status: "error"; message: string };
+
+/*
+ * How long the form waits for the API before giving up.
+ *
+ * Long enough for a slow connection, and far shorter than the 51 s a sleeping
+ * Render instance took to answer on 2026-10-22. That request had no timeout,
+ * so the button sat on "Sending..." for close to a minute while the booking
+ * went through behind it, and the visitor left believing it had failed.
+ */
+export const SUBMIT_TIMEOUT_MS = 15_000;
+
+/* Retrying is safe to suggest: the API treats an identical resubmission
+   inside ten minutes as the same booking, so a request that did get through
+   is not recorded twice. */
+export const TIMEOUT_MESSAGE =
+  "The booking server is taking too long to answer. Please try again in a " +
+  `moment. If it keeps happening, call or text ${site.phone}.`;
 
 const field =
   "w-full border-b border-neutral-400 bg-transparent pb-2.5 pt-1 text-[15px] text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-neutral-900";
@@ -81,11 +98,14 @@ export default function BookingForm() {
     }
 
     setSubmitState({ status: "sending" });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), SUBMIT_TIMEOUT_MS);
     try {
       const response = await fetch(bookingEndpoint(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
+        body: JSON.stringify(form),
+        signal: controller.signal
       });
 
       if (!response.ok) {
@@ -96,10 +116,17 @@ export default function BookingForm() {
       setSubmitState({ status: "sent", name: form.name.trim() });
       setForm(emptyBookingForm);
     } catch (error) {
+      /* The abort is ours, so say what actually happened rather than
+         whatever the browser calls an aborted fetch. */
+      const timedOut = controller.signal.aborted;
       setSubmitState({
         status: "error",
-        message: error instanceof Error ? error.message : "Your request could not be sent."
+        message: timedOut
+          ? TIMEOUT_MESSAGE
+          : error instanceof Error ? error.message : "Your request could not be sent."
       });
+    } finally {
+      clearTimeout(timer);
     }
   };
 
@@ -286,9 +313,16 @@ export default function BookingForm() {
           </span>
           <span className="absolute inset-0 -translate-x-full bg-[#0be6f9] transition-transform duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-enabled:group-hover:translate-x-0" />
         </button>
-        <p className="mt-5 text-[13px] text-neutral-600">
-          You will get a confirmation by email, and I will be in touch soon.
-        </p>
+        {/* Live region, so a screen reader hears the state change too. */}
+        {submitState.status === "sending" ? (
+          <p role="status" className="mt-5 text-[13px] text-neutral-600">
+            Sending your request. This can take a few seconds.
+          </p>
+        ) : (
+          <p className="mt-5 text-[13px] text-neutral-600">
+            You will get a confirmation by email, and I will be in touch soon.
+          </p>
+        )}
       </div>
     </form>
   );

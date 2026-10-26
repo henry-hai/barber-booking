@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import BookingForm from "@/components/BookingForm";
+import BookingForm, { SUBMIT_TIMEOUT_MS, TIMEOUT_MESSAGE } from "@/components/BookingForm";
 
 /* Fills every required field. Returns the values used so tests can assert on
    what should have been posted. */
@@ -163,6 +163,61 @@ describe("BookingForm", () => {
 
     expect(await screen.findByText("Network down")).toBeInTheDocument();
     expect(screen.getByLabelText("Name", { exact: false })).toHaveValue("Jordan Reyes");
+  });
+
+  it("shows a sending state while the request is in flight", async () => {
+    let finish: (value: unknown) => void = () => {};
+    vi.stubGlobal("fetch", vi.fn(() => new Promise((resolve) => { finish = resolve; })));
+
+    const user = userEvent.setup();
+    render(<BookingForm />);
+    await fillRequiredFields(user);
+    await submit(user);
+
+    expect(await screen.findByRole("button", { name: "Sending..." })).toBeDisabled();
+    expect(screen.getByRole("status")).toHaveTextContent("Sending your request");
+
+    finish({ ok: true, json: () => Promise.resolve({ ok: true }) });
+    expect(await screen.findByText("Request received")).toBeInTheDocument();
+  });
+
+  /* The 51 s cold start on Render left the form stuck on "Sending..." with
+     no way out. The form now gives up at fifteen seconds and says so. */
+  it("gives up after the timeout with a retry message and keeps the form", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.stubGlobal("fetch", vi.fn((_url: string, init: RequestInit) =>
+      new Promise((_resolve, reject) => {
+        init.signal?.addEventListener("abort", () =>
+          reject(new DOMException("The operation was aborted.", "AbortError")));
+      })
+    ));
+
+    try {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      render(<BookingForm />);
+      await fillRequiredFields(user);
+      await submit(user);
+      expect(await screen.findByRole("button", { name: "Sending..." })).toBeInTheDocument();
+
+      await act(async () => { vi.advanceTimersByTime(SUBMIT_TIMEOUT_MS); });
+
+      expect(await screen.findByText(TIMEOUT_MESSAGE)).toBeInTheDocument();
+      expect(screen.getByLabelText("Name", { exact: false })).toHaveValue("Jordan Reyes");
+      expect(screen.getByRole("button", { name: "Submit" })).toBeEnabled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("passes an abort signal so the timeout can cancel the request", async () => {
+    const user = userEvent.setup();
+    render(<BookingForm />);
+    await fillRequiredFields(user);
+    await submit(user);
+
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    const [, init] = (fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(init.signal).toBeInstanceOf(AbortSignal);
   });
 
 });
