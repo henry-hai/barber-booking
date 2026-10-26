@@ -30,7 +30,7 @@ const StatCard = ({ label, value }: { label: string, value: number }) => (
 );
 
 /* The appointments dashboard: headline stats plus a list of booking requests
-   pulled from the Google Sheet via the server's /appointments endpoint. */
+   from the API's /appointments endpoint. */
 const Dashboard = () => {
   const [requests, setRequests] = useState<Appointments.IBookingRequest[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -44,7 +44,7 @@ const Dashboard = () => {
         const data = await worker.listAppointments();
         if (active) { setRequests(data); }
       } catch (e) {
-        if (active) { setError("Could not load appointments. Is the Google Sheet configured?"); }
+        if (active) { setError("Could not load appointments."); }
       } finally {
         if (active) { setLoading(false); }
       }
@@ -80,7 +80,7 @@ const Dashboard = () => {
         <div className="emptyState">
           <EventIcon className="emptyIcon" />
           <h2>No booking requests yet</h2>
-          <p>New requests will appear here once they land in the sheet.</p>
+          <p>New requests will appear here as they come in.</p>
         </div>
       }
 
