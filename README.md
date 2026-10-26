@@ -8,7 +8,7 @@ The customer-facing site is a statically generated Next.js app in `web/`, deploy
 
 - **Live site:** [henryhaistudio.com](https://henryhaistudio.com)
 
-The earlier hand-rolled static version is still up on GitHub Pages from a separate repo. It is the one currently serving clients, and it is unrelated to this codebase:
+The earlier hand-rolled static version is still up on GitHub Pages from a separate repo. It has been superseded by this one and is unrelated to this codebase:
 
 - **Previous site:** [henry-hai.github.io/barber_website/](https://henry-hai.github.io/barber_website/) ([source](https://github.com/henry-hai/barber_website))
 
@@ -241,6 +241,8 @@ Several of them exist because a bug reached production first, and each says so i
 ## Deployment
 
 Two hosts, because the pieces have different shapes. The site is static and belongs on a CDN; the API holds a long-lived IMAP connection and needs a process that stays up, which rules out a serverless function.
+
+There is also an AWS version of the booking path in `infra/`: API Gateway in front of two Python Lambdas, DynamoDB, and S3 behind CloudFront, as one SAM stack per stage. It exists because Render's free tier sleeps after fifteen idle minutes and the first booking after that waited 51 s. It is deployed to a test stage and is not yet what the live site uses. `infra/README.md` has the service list, the deploy and the rollback.
 
 **No credential is committed.** `serverInfo.json` and `serviceAccount.json` are gitignored, and every value below is set in the host's own dashboard.
 
