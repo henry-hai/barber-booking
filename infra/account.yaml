@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >-
+  Account-level guardrail for the barber booking platform: a five dollar
+  monthly budget that emails before and when it is crossed. Deployed once per
+  account, not per stage, which is why it is not in template.yaml.
+
+# Deploy from us-east-1. Budgets is a global service with its endpoint there:
+#   aws cloudformation deploy --region us-east-1 --stack-name barber-account \
+#     --template-file infra/account.yaml --parameter-overrides Email=<address>
+#
+# On the Free plan nothing is charged, so this is for the day the account is
+# upgraded. It alerts. It does not stop anything.
+
+Parameters:
+  Email:
+    Type: String
+    Description: Where the alerts go.
+  MonthlyLimit:
+    Type: Number
+    Default: 5
+    Description: US dollars per month.
+
+Resources:
+  MonthlyBudget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: barber-monthly
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit:
+          Amount: !Ref MonthlyLimit
+          Unit: USD
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref Email
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref Email
+        - Notification:
+            NotificationType: FORECASTED
+            ComparisonOperator: GREATER_THAN
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref Email
+
+Outputs:
+  BudgetName:
+    Value: !Ref MonthlyBudget

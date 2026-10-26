@@ -1,0 +1,9 @@
+# boto3 ships inside the Lambda Python runtime, Resend is one urllib POST,
+# and the rest is the standard library.
+#
+# tzdata is the one exception. booking.py stamps every booking in
+# America/Los_Angeles through zoneinfo, which reads the system's zone files
+# and falls back to this package when there are none. Whether the Lambda
+# image carries the system files is not something to find out from a booking
+# logged on the wrong day, so the fallback ships with the function.
+tzdata==2025.2

@@ -19,7 +19,20 @@ Thumbs.db
 
 # Local notes
 barber-booking_project_context.md
+HANDOFF.md
 
 # Test output
 playwright-report/
 test-results/
+
+# AWS build and test output
+infra/.aws-sam/
+infra/.venv/
+infra/.pytest_cache/
+__pycache__/
+
+# The static export of the site, built only for S3
+web/out/
+
+# Generated test-stage credentials, never committed
+*.local.json

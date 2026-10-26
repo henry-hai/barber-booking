@@ -1,0 +1,39 @@
+# sam deploy --config-env test   (or prod)
+#
+# Two stacks, one per stage, in us-west-2. Oregon rather than N. California
+# because it carries every service here at the lower price, and the extra
+# fifteen milliseconds from San Jose are invisible next to the fifty seconds
+# this replaces. The test stage deploys without a prompt. Prod asks first.
+
+version = 0.1
+
+[default.global.parameters]
+region = "us-west-2"
+
+[default.build.parameters]
+cached = true
+parallel = true
+
+[test.global.parameters]
+region = "us-west-2"
+
+[test.deploy.parameters]
+stack_name = "barber-test"
+resolve_s3 = true
+s3_prefix = "barber-test"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Stage=test"
+confirm_changeset = false
+fail_on_empty_changeset = false
+
+[prod.global.parameters]
+region = "us-west-2"
+
+[prod.deploy.parameters]
+stack_name = "barber-prod"
+resolve_s3 = true
+s3_prefix = "barber-prod"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Stage=prod"
+confirm_changeset = true
+fail_on_empty_changeset = false

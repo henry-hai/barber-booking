@@ -1,0 +1,455 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Description: >-
+  Henry Hai Studio booking platform. One HTTP API in front of two Python
+  Lambdas, two DynamoDB tables, and two S3 buckets served through CloudFront.
+  One stack per stage: barber-test and barber-prod.
+
+# WHY THIS EXISTS
+# The Express API on Render's free tier slept after fifteen idle minutes and
+# the first request after that took a measured 51.3 s. Lambda cold starts in
+# well under a second, API Gateway never sleeps, and at fifty bookings a month
+# every line item below sits inside the always-free allowances.
+#
+# NO SECRET APPEARS IN THIS FILE. The Resend key and the dashboard credentials
+# are SecureString parameters under /barber/<stage>/ in Parameter Store, read
+# by the functions at cold start. The template only grants the right to read
+# those exact names.
+
+Parameters:
+  Stage:
+    Type: String
+    AllowedValues: [test, prod]
+    Description: Which stage this stack is. Tables, buckets and parameters are all named by it.
+
+  MailFrom:
+    Type: String
+    Default: "Henry Hai Studio <bookings@henryhaistudio.com>"
+    Description: The verified Resend sender. Not a secret.
+
+  OwnerEmail:
+    Type: String
+    Default: henryhaistudio@gmail.com
+    Description: Where owner notifications go. The studio mailbox, from 2026-10-25 on.
+
+  OwnerCc:
+    Type: String
+    Default: henryhai.nguyen99@gmail.com
+    Description: Copied on every owner notification. The mailbox every request since 2024 was filed in, kept as the backup. Empty for no copy.
+
+Globals:
+  Function:
+    Runtime: python3.13
+    # Graviton: cheaper per millisecond and the code is pure Python.
+    Architectures: [arm64]
+    MemorySize: 256
+    CodeUri: src/
+    Environment:
+      Variables:
+        STAGE: !Ref Stage
+        SSM_PREFIX: !Sub /barber/${Stage}
+        BOOKINGS_TABLE: !Ref BookingsTable
+        CONTACTS_TABLE: !Ref ContactsTable
+
+Resources:
+
+  # ---------------------------------------------------------------- API
+
+  Api:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Description: !Sub Henry Hai Studio booking API (${Stage})
+      # API Gateway answers the preflight and stamps these headers onto every
+      # response, including the functions' 4xx and 5xx ones. The functions
+      # add none of their own, or browsers would see them doubled.
+      # Origin * is what Express sent too: the booking route is public and
+      # the dashboard routes need credentials from whichever origin calls.
+      CorsConfiguration:
+        AllowOrigins: ["*"]
+        AllowMethods: [GET, POST, DELETE, OPTIONS]
+        AllowHeaders: [Content-Type, Authorization, X-Requested-With]
+        MaxAge: 600
+      # Flood backstop across all callers. The per address limit the Express
+      # route had lives in the booking function, counted in DynamoDB.
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 20
+        ThrottlingRateLimit: 10
+      AccessLogSettings:
+        DestinationArn: !GetAtt ApiLogs.Arn
+        Format: >-
+          {"requestId":"$context.requestId","time":"$context.requestTime","ip":"$context.identity.sourceIp","method":"$context.httpMethod","path":"$context.path","status":"$context.status","latencyMs":"$context.responseLatency","integrationError":"$context.integrationErrorMessage"}
+
+  ApiLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /barber/${Stage}/api-access
+      RetentionInDays: 30
+
+  # ---------------------------------------------------------------- Functions
+
+  BookingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub barber-booking-${Stage}
+      Description: POST /booking and GET /healthz. Validates, guards against duplicates, saves, then sends both emails before answering.
+      Handler: booking_handler.handler
+      # Two Resend calls and three table writes, then the response. API
+      # Gateway's own ceiling is 30 s.
+      Timeout: 25
+      Environment:
+        Variables:
+          MAIL_FROM: !Ref MailFrom
+          OWNER_EMAIL: !Ref OwnerEmail
+          OWNER_CC: !Ref OwnerCc
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Sid: WriteBookings
+              Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+              Resource: !GetAtt BookingsTable.Arn
+            - Sid: ReadResendKey
+              Effect: Allow
+              Action: ssm:GetParameter
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/barber/${Stage}/resend/api-key
+      Events:
+        Booking:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Method: POST
+            Path: /booking
+        Health:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Method: GET
+            Path: /healthz
+
+  BookingFunctionLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${BookingFunction}
+      RetentionInDays: 30
+
+  DashboardFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub barber-dashboard-${Stage}
+      Description: The dashboard's routes behind basic auth. GET /appointments, and GET, POST, DELETE /contacts.
+      Handler: dashboard_handler.handler
+      Timeout: 10
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Sid: ReadBookings
+              Effect: Allow
+              Action: dynamodb:Scan
+              Resource: !GetAtt BookingsTable.Arn
+            - Sid: ManageContacts
+              Effect: Allow
+              Action:
+                - dynamodb:Scan
+                - dynamodb:PutItem
+                - dynamodb:DeleteItem
+              Resource: !GetAtt ContactsTable.Arn
+            - Sid: ReadDashboardCredentials
+              Effect: Allow
+              Action: ssm:GetParameter
+              Resource:
+                - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/barber/${Stage}/dashboard/user
+                - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/barber/${Stage}/dashboard/password
+      Events:
+        Appointments:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Method: GET
+            Path: /appointments
+        ListContacts:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Method: GET
+            Path: /contacts
+        AddContact:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Method: POST
+            Path: /contacts
+        DeleteContact:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Method: DELETE
+            Path: /contacts/{id}
+
+  DashboardFunctionLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${DashboardFunction}
+      RetentionInDays: 30
+
+  # ---------------------------------------------------------------- Tables
+  #
+  # Provisioned rather than on-demand, inside the always-free 25 read and 25
+  # write units per account. Both stages together use 16 of each. Retained on
+  # stack deletion: a booking record outlives any stack that happens to hold it.
+
+  BookingsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub barber-bookings-${Stage}
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      AttributeDefinitions:
+        - AttributeName: bookingId
+          AttributeType: S
+        - AttributeName: date
+          AttributeType: S
+        - AttributeName: submittedAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: bookingId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        # A day's bookings, in the order they arrived.
+        - IndexName: date-index
+          KeySchema:
+            - AttributeName: date
+              KeyType: HASH
+            - AttributeName: submittedAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 2
+            WriteCapacityUnits: 2
+      # The duplicate guard and rate limit items carry expiresAt. Bookings do
+      # not, so they never expire.
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  ContactsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub barber-contacts-${Stage}
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      AttributeDefinitions:
+        - AttributeName: contactId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: contactId
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  # ---------------------------------------------------------------- Static hosting
+  #
+  # Two private buckets, each readable only by its own distribution through
+  # origin access control. Nothing is public at the bucket level and no
+  # website endpoint is enabled, so the only way in is through CloudFront.
+
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub barber-${Stage}
+        Description: Lets the barber distributions sign their requests to S3.
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub barber-site-${Stage}-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  SiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub ${SiteBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${SiteDistribution}
+
+  SiteDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub Henry Hai Studio site (${Stage})
+        DefaultRootObject: index.html
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        # North America and Europe only. The clients are in California.
+        PriceClass: PriceClass_100
+        Origins:
+          - Id: site
+            DomainName: !GetAtt SiteBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: site
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          # Managed-CachingOptimized. Honours the Cache-Control each object
+          # is uploaded with: a year for hashed assets, none for index.html.
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          # Managed-SecurityHeadersPolicy: the same nosniff, referrer and
+          # frame headers vercel.json sets, plus HSTS.
+          ResponseHeadersPolicyId: 67f7725c-6f97-4210-82d7-5512b31e9d03
+        # S3 answers a missing key with 403 when the caller is OAC, so both
+        # become the site's own 404 page.
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 404
+            ResponsePagePath: /404.html
+            ErrorCachingMinTTL: 60
+          - ErrorCode: 404
+            ResponseCode: 404
+            ResponsePagePath: /404.html
+            ErrorCachingMinTTL: 60
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
+  DashboardBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub barber-dashboard-${Stage}-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  DashboardBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DashboardBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub ${DashboardBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${DashboardDistribution}
+
+  # The dashboard bundle holds no client data. Everything it shows comes from
+  # the API behind basic auth, so the bundle itself can be served plainly.
+  DashboardDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub Henry Hai Studio dashboard (${Stage})
+        DefaultRootObject: index.html
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        PriceClass: PriceClass_100
+        Origins:
+          - Id: dashboard
+            DomainName: !GetAtt DashboardBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: dashboard
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          ResponseHeadersPolicyId: 67f7725c-6f97-4210-82d7-5512b31e9d03
+        # A single-page app: any path falls back to the app itself.
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 60
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 60
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
+Outputs:
+  ApiUrl:
+    Description: Base URL of the HTTP API. The site posts to <ApiUrl>/booking.
+    Value: !Sub https://${Api}.execute-api.${AWS::Region}.amazonaws.com
+  SiteUrl:
+    Description: The site on CloudFront.
+    Value: !Sub https://${SiteDistribution.DomainName}
+  DashboardUrl:
+    Description: The dashboard on CloudFront.
+    Value: !Sub https://${DashboardDistribution.DomainName}
+  SiteBucketName:
+    Value: !Ref SiteBucket
+  DashboardBucketName:
+    Value: !Ref DashboardBucket
+  SiteDistributionId:
+    Value: !Ref SiteDistribution
+  DashboardDistributionId:
+    Value: !Ref DashboardDistribution
+  BookingsTableName:
+    Value: !Ref BookingsTable
+  ContactsTableName:
+    Value: !Ref ContactsTable
+  BookingFunctionName:
+    Value: !Ref BookingFunction
+  DashboardFunctionName:
+    Value: !Ref DashboardFunction

@@ -1,0 +1,26 @@
+# Test tooling for the Lambda code in src/. The functions themselves have no
+# dependencies beyond the runtime, so this file exists for pytest and moto.
+#
+#   cd infra && uv run pytest
+#
+# uv creates .venv/ here on first run and pins the tools in uv.lock.
+
+[project]
+name = "barber-infra"
+version = "0.0.0"
+description = "Tests for the booking platform's Lambda functions"
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "moto[dynamodb,ssm]>=5.0",
+  "boto3>=1.35",
+  "pyyaml>=6.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
